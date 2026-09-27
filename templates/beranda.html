@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block judul %}{{ nama }} — Baca Novel Terjemahan Indonesia{% endblock %}
+
+{% block isi %}
+
+<!-- HERO (mirip novelpia, warna APK kita) -->
+<section class="hero">
+  <div class="hero-isi">
+    <p class="hero-label">ARKIB PRIBADI · {{ total_novel }} NOVEL</p>
+    <h1 class="hero-judul">Baca Novel Terjemahan<br><em>Sepuasnya</em></h1>
+    <p class="hero-sub">{{ total_novel }} novel · {{ total_bab }} bab · lengkap dengan ilustrasi</p>
+    <div class="hero-aksi">
+      <a class="tombol utama" href="/jelajah">Mulai Baca</a>
+      <a class="tombol" href="/cari">Cari Novel</a>
+    </div>
+  </div>
+</section>
+
+<!-- chip tipe -->
+<section class="bagian">
+  <div class="chip-baris">
+    <a class="chip aktif" href="/jelajah">Semua</a>
+    <a class="chip" href="/jelajah?tipe=web">Web Novel</a>
+    <a class="chip" href="/jelajah?tipe=light">Light Novel</a>
+    <a class="chip" href="/jelajah?status=ongoing">Ongoing</a>
+    <a class="chip" href="/jelajah?status=tamat">Tamat</a>
+  </div>
+</section>
+
+<!-- POPULER (grid 2x4) -->
+<section class="bagian">
+  <div class="bagian-kepala">
+    <h2>Populer</h2><a class="lebih" href="/jelajah?order=populer">Lihat semua →</a>
+  </div>
+  <div class="grid grid-2">
+    {% for n in populer[:4] %}
+    <a class="kartu-lebar" href="{{ n.url }}">
+      <img class="kartu-lebar-cover" src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">
+      <div class="kartu-lebar-isi">
+        <span class="urut">{{ loop.index }}</span>
+        <h3>{{ n.judul }}</h3>
+        <p class="redup">{{ n.jumlah_bab }} bab{% if n.rating %} · ★ {{ n.rating }}{% endif %}</p>
+        <p class="kecil redup">{{ n.status or '' }}{% if n.tipe %} · {{ n.tipe }}{% endif %}</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- BARU DITAMBAH (rak geser) -->
+<section class="bagian">
+  <div class="bagian-kepala">
+    <h2>Baru Ditambah</h2><a class="lebih" href="/jelajah?order=baru">Lihat semua →</a>
+  </div>
+  <div class="rak" data-geser>
+    {% for n in terbaru %}{% include "_kartu.html" %}{% endfor %}
+  </div>
+</section>
+
+<!-- RANDOM -->
+<section class="bagian">
+  <div class="bagian-kepala"><h2>Random Novel</h2><span class="lebih redup">pilihan hari ini</span></div>
+  <div class="rak" data-geser>
+    {% for n in acak %}{% include "_kartu.html" %}{% endfor %}
+  </div>
+</section>
+
+<!-- ONGOING (carousel kotak) -->
+<section class="bagian">
+  <div class="bagian-kepala">
+    <h2>Ongoing</h2><a class="lebih" href="/jelajah?status=ongoing">Lihat semua →</a>
+  </div>
+  <div class="rak" data-geser>
+    {% for n in ongoing %}{% include "_kartu.html" %}{% endfor %}
+  </div>
+</section>
+
+<!-- TAG POPULER -->
+<section class="bagian">
+  <div class="bagian-kepala"><h2>Tag Populer</h2></div>
+  <div class="tag-baris">
+    {% for t in tag %}<a class="tag" href="/tag/{{ t.slug }}">{{ t.nama }}<span>{{ t.jumlah_novel }}</span></a>{% endfor %}
+  </div>
+</section>
+
+<!-- GENRE -->
+<section class="bagian">
+  <div class="bagian-kepala"><h2>Genre</h2></div>
+  <div class="tag-baris">
+    {% for g in genre %}<a class="tag" href="/genre/{{ g.slug }}">{{ g.nama }}<span>{{ g.jumlah }}</span></a>{% endfor %}
+  </div>
+</section>
+
+<!-- TAMAT (paling bawah) -->
+<section class="bagian">
+  <div class="bagian-kepala">
+    <h2>Tamat</h2><a class="lebih" href="/jelajah?status=tamat">Lihat semua →</a>
+  </div>
+  <div class="rak" data-geser>
+    {% for n in tamat %}{% include "_kartu.html" %}{% endfor %}
+  </div>
+</section>
+
+{% endblock %}
