@@ -1,46 +1,4 @@
-# ── Rahasia / kredensial (JANGAN PERNAH masuk repo) ──
-*.env
-.env*
-*naver-api.env*
-*naver-token.env*
-*token*
-*secret*
-*.pem
-*.key
-id_rsa*
-id_ed25519*
-credentials-file*
-
-# ── Basis data & berkas besar ──
-*.db
-*.db-wal
-*.db-shm
-*.sqlite
-*.sqlite3
-cadangan/
-gambar/
-cover/
-cover-asli/
-staging/
-perbaikan/
-
-# ── Python ──
+cadangan-redesign-28sep/
 __pycache__/
-*.py[cod]
-venv/
-.venv/
-*.egg-info/
-
-# ── Alat sekali pakai / backup ──
-*.bak
-*.tmp
-*.log
-logs/
-perbaiki-tpl.py
-perbaiki-tpl2.py
-
-# ── Editor / OS ──
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
+*.pyc
+anti-slop/cadangan-001/

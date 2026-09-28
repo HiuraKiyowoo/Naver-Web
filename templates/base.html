@@ -1,4 +1,4 @@
-&lt;!DOCTYPE html&gt;
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="utf-8">
@@ -12,7 +12,10 @@
 <meta property="og:site_name" content="{{ nama }}">
 <meta name="theme-color" content="#071018">
 <link rel="icon" href="/static/ikon.svg">
-<link rel="stylesheet" href="/static/web.css">
+{# versi CSS ikut mtime berkas → setiap design berubah, Cloudflare & browser
+   otomatis ambil yang baru (pelajaran 28 Sep: CF cache 4 jam bikin CSS basi) #}
+<link rel="preload" href="/static/web.css?v={{ versi_aset() }}" as="style">
+<link rel="stylesheet" href="/static/web.css?v={{ versi_aset() }}">
 </head>
 <body>
 <header class="kepala">
@@ -23,12 +26,13 @@
     </a>
     <form class="cari-atas" action="/cari" method="get" role="search">
       <input type="search" name="q" placeholder="Cari judul, penulis, atau isi bab…"
-             value="{{ q|default('') }}" aria-label="Cari">
+             value="{{ q|default('') }}" aria-label="Cari" autocomplete="off">
       <button type="submit" aria-label="Cari">Cari</button>
     </form>
     <nav class="nav-atas">
       <a href="/jelajah">Jelajah</a>
       <a href="/jelajah?order=baru">Terbaru</a>
+      <a href="/jelajah">Genre</a>
       <a class="tombol-apk" href="/apk">Unduh APK</a>
     </nav>
   </div>
@@ -41,11 +45,12 @@
 <footer class="kaki">
   <div class="wadah kaki-dalam">
     <div>
-      <b>{{ nama }}</b> — arsip pribadi novel terjemahan.
-      <br><span class="redup">{{ total_novel|default('') }} novel · {{ total_bab|default('') }} bab</span>
+      <b>{{ nama }}</b>
+      <span class="redup">Arsip pribadi novel terjemahan · {{ total_novel|default('') }} novel · {{ total_bab|default('') }} bab</span>
     </div>
     <div class="kaki-tautan">
       <a href="/jelajah">Jelajah</a>
+      <a href="/jelajah">Genre</a>
       <a href="/sitemap.xml">Sitemap</a>
       <a href="/status">Status</a>
       <a href="/apk">APK</a>

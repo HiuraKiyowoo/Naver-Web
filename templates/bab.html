@@ -35,9 +35,9 @@
 {% endif %}
 
 <nav class="baca-nav">
-  <a class="{{ 'mati' if not sebelum }}" href="{{ ('/novel/' ~ n.slug ~ '/bab/' ~ sebelum) if sebelum else '#' }}">‹ Sebelumnya</a>
+  <a class="{{ 'mati' if not sebelum }}" href="{{ ('/novel/' ~ n.slug ~ '/bab/' ~ sebelum) if sebelum else '#' }}">Sebelumnya</a>
   <a class="kembali" href="/novel/{{ n.slug }}">Daftar Bab</a>
-  <a class="{{ 'mati' if not sesudah }}" href="{{ ('/novel/' ~ n.slug ~ '/bab/' ~ sesudah) if sesudah else '#' }}">Selanjutnya ›</a>
+  <a class="{{ 'mati' if not sesudah }}" href="{{ ('/novel/' ~ n.slug ~ '/bab/' ~ sesudah) if sesudah else '#' }}">Selanjutnya</a>
 </nav>
 
 {% endblock %}

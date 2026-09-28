@@ -37,6 +37,41 @@ app = FastAPI(title="Naver Web", docs_url=None, redoc_url=None)
 app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
 tpl = Jinja2Templates(directory=str(BASE / "templates"))
 
+
+@app.middleware("http")
+async def atur_cache(request, call_next):
+    """Berkas /static: cache 1 jam + wajib revalidate.
+
+    Cloudflare sebelumnya menyimpan CSS 4 jam (`max-age=14400`) → tampilan
+    lama bertahan lama. Sekarang 1 jam dan `must-revalidate` supaya berkas
+    yang berubah cepat terpakai. HTML tidak di-cache (selalu segar).
+    """
+    jawab = await call_next(request)
+    if request.url.path.startswith("/static/"):
+        jawab.headers["Cache-Control"] = "public, max-age=3600, must-revalidate"
+    elif jawab.headers.get("content-type", "").startswith("text/html"):
+        jawab.headers["Cache-Control"] = "no-cache"
+    return jawab
+
+
+def _versi_aset() -> str:
+    """Versi aset ikut waktu-ubah berkas CSS/JS.
+
+    Dipakai di base.html sebagai `?v=` supaya browser & Cloudflare TIDAK
+    menyajikan CSS basi (pelajaran 28 Sep: CF cache `max-age=14400` bikin
+    tampilan lama bertahan sampai 4 jam walau berkas sudah diperbarui).
+    """
+    try:
+        t = max((BASE / "static" / n).stat().st_mtime
+                for n in ("web.css", "web.js")
+                if (BASE / "static" / n).exists())
+        return str(int(t))
+    except Exception:
+        return "1"
+
+
+tpl.env.globals["versi_aset"] = _versi_aset
+
 # ── konfigurasi situs (dipakai di <head> utk SEO) ──
 SITUS = os.environ.get("NAVER_SITUS", "https://navernovel.my.id")
 NAMA = "Naver Novel"
@@ -78,22 +113,53 @@ def ambil(q, par=(), satu=False):
 def beranda(request: Request):
     n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
     b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
-    populer = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
-        "ORDER BY jumlah_bab DESC LIMIT 8")]
-    terbaru = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
-        "ORDER BY COALESCE(waktu_update, created_at) DESC LIMIT 12")]
+    # HERO: novel rating tertinggi (rating 0 dilewati — 148 novel ratingnya 0)
+    hero = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "AND COALESCE(rating,0) >= 1 "
+        "ORDER BY rating DESC, bookmark DESC LIMIT 3")]
+    # TRENDING: paling banyak di-bookmark
+    trending = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "ORDER BY COALESCE(bookmark,0) DESC LIMIT 10")]
+    # RANDOM: tetap sama tiap hari (seed tanggal) supaya tidak berkedip saat reload
     seed = int(time.strftime("%Y%m%d"))
     acak = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
-        "ORDER BY (id * ?) % 10007 LIMIT 12", (seed,))]
-    ongoing = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
-        "AND LOWER(COALESCE(status,'')) LIKE '%ongoing%' ORDER BY jumlah_bab DESC LIMIT 12")]
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "ORDER BY (id * ?) % 10007 LIMIT 10", (seed,))]
+    # BARU DI TAMBAH: created_at terbaru (TERISI SEMUA, tidak seperti waktu_update)
+    baru = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "ORDER BY created_at DESC LIMIT 10")]
+    # LATEST UPDATE: pakai MAX(bab.tanggal) — waktu_update KOSONG di 478/495 novel.
+    # ⚠️ JANGAN pakai "GROUP BY n.id + MAX()" → 12 detik (pindai 111.680 bab).
+    #    Cara cepat: ambil 60 bab terbaru (kena index idx_bab_tanggal, 0,01 dtk),
+    #    baru ambil novel uniknya. Lihat tambah-index-tanggal.py.
+    update, sudah = [], set()
+    for r in ambil("""
+        SELECT b.tanggal AS tg, n.*
+        FROM bab b JOIN novel n ON n.id = b.novel_id
+        WHERE b.tanggal IS NOT NULL AND b.tanggal != ''
+          AND n.cover_webp IS NOT NULL AND n.judul != ''
+        ORDER BY b.tanggal DESC LIMIT 60"""):
+        if r["id"] in sudah:
+            continue
+        sudah.add(r["id"])
+        k = kartu(r)
+        k["tanggal"] = (r["tg"] or "")[:10]
+        k["c_bab"] = r["jumlah_bab"]
+        update.append(k)
+        if len(update) >= 10:
+            break
+    # TAMAT: status Completed
     tamat = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
-        "AND LOWER(COALESCE(status,'')) LIKE '%tamat%' ORDER BY jumlah_bab DESC LIMIT 12")]
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "AND LOWER(COALESCE(status,'')) LIKE '%complete%' "
+        "ORDER BY COALESCE(rating,0) DESC, COALESCE(bookmark,0) DESC LIMIT 10")]
+    ongoing = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "AND LOWER(COALESCE(status,'')) LIKE '%ongoing%' "
+        "ORDER BY COALESCE(bookmark,0) DESC LIMIT 10")]
     genre = [dict(r) for r in ambil("""
         SELECT g.slug, g.nama, COUNT(ng.novel_id) jumlah FROM genre g
         JOIN novel_genre ng ON ng.genre_id = g.id
@@ -103,8 +169,9 @@ def beranda(request: Request):
     return tpl.TemplateResponse(request, "beranda.html", {
         "situs": SITUS, "nama": NAMA, "desk": DESK,
         "kanon": str(request.url), "total_novel": n, "total_bab": b,
-        "populer": populer, "terbaru": terbaru, "acak": acak,
-        "ongoing": ongoing, "tamat": tamat, "genre": genre, "tag": tag,
+        "hero": hero, "trending": trending, "acak": acak, "baru": baru,
+        "update": update, "tamat": tamat, "ongoing": ongoing,
+        "genre": genre, "tag": tag,
     })
 
 
@@ -133,7 +200,7 @@ def novel(request: Request, slug: str):
         ORDER BY n.jumlah_bab DESC LIMIT 12""", (r["id"], r["id"]))]
     return tpl.TemplateResponse(request, "novel.html", {
         "situs": SITUS, "nama": NAMA,
-        "judul": f"{r['judul']} — {NAMA}",
+        "judul": f"{r['judul']}: {NAMA}",
         "desk": (r["sinopsis"] or DESK)[:160],
         "kanon": f"{SITUS}/novel/{slug}",
         "gambar_og": f"{SITUS}/cover/{r['id']}.webp" if r["cover_webp"] else None,
@@ -171,7 +238,7 @@ def bab(request: Request, slug: str, urutan: int):
     ada_teks = bool((b["teks"] or "").strip())
     return tpl.TemplateResponse(request, "bab.html", {
         "situs": SITUS, "nama": NAMA,
-        "judul": f"{b['judul']} — {n['judul']} | {NAMA}",
+        "judul": f"{b['judul']}: {n['judul']} | {NAMA}",
         "desk": (b["teks"] or "")[:150],
         "kanon": f"{SITUS}/novel/{slug}/bab/{urutan}",
         "n": dict(n), "b": dict(b), "paragraf": teks, "gambar": gmb,
@@ -218,7 +285,7 @@ def jelajah(request: Request,
         "SELECT slug, nama, jumlah_novel FROM tag ORDER BY jumlah_novel DESC LIMIT 60")]
     return tpl.TemplateResponse(request, "jelajah.html", {
         "situs": SITUS, "nama": NAMA,
-        "judul": f"Jelajah Novel — {NAMA}", "desk": DESK,
+        "judul": f"Jelajah Novel: {NAMA}", "desk": DESK,
         "kanon": f"{SITUS}/jelajah",
         "hasil": [kartu(x) for x in baris], "total": total,
         "q": q, "status": status, "tipe": tipe, "genre": genre, "tag": tag,
@@ -241,7 +308,7 @@ def genre(request: Request, slug: str, page: int = 1, per: int = 24):
                   (g["id"], per, (page - 1) * per))
     return tpl.TemplateResponse(request, "daftar.html", {
         "situs": SITUS, "nama": NAMA,
-        "judul": f"Genre {g['nama']} — {NAMA}", "desk": f"Novel genre {g['nama']}.",
+        "judul": f"Genre {g['nama']}: {NAMA}", "desk": f"Novel genre {g['nama']}.",
         "kanon": f"{SITUS}/genre/{slug}",
         "kepala": f"Genre: {g['nama']}", "hasil": [kartu(x) for x in baris],
         "total": total, "page": page, "per": per,
@@ -262,7 +329,7 @@ def tag(request: Request, slug: str, page: int = 1, per: int = 24):
                   (t["id"], per, (page - 1) * per))
     return tpl.TemplateResponse(request, "daftar.html", {
         "situs": SITUS, "nama": NAMA,
-        "judul": f"Tag {t['nama']} — {NAMA}", "desk": f"Novel dengan tag {t['nama']}.",
+        "judul": f"Tag {t['nama']}: {NAMA}", "desk": f"Novel dengan tag {t['nama']}.",
         "kanon": f"{SITUS}/tag/{slug}",
         "kepala": f"Tag: {t['nama']}", "hasil": [kartu(x) for x in baris],
         "total": total, "page": page, "per": per,
@@ -291,7 +358,7 @@ def cari(request: Request, q: str = "", page: int = 1, per: int = 24):
             bab_hits = []
     return tpl.TemplateResponse(request, "cari.html", {
         "situs": SITUS, "nama": NAMA,
-        "judul": f"Cari: {q} — {NAMA}", "desk": DESK,
+        "judul": f"Cari {q}: {NAMA}", "desk": DESK,
         "kanon": f"{SITUS}/cari?q={q}",
         "q": q, "hasil": hasil, "total": total, "bab_hits": bab_hits,
         "page": page, "per": per, "total_hal": (total + per - 1) // per,
@@ -415,9 +482,40 @@ def apk(request: Request):
     b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
     return tpl.TemplateResponse(request, "apk.html", {
         "situs": SITUS, "nama": NAMA,
-        "judul": f"Unduh APK — {NAMA}",
+        "judul": f"Unduh APK: {NAMA}",
         "desk": "Unduh aplikasi Android Naver Novel untuk baca offline.",
         "kanon": f"{SITUS}/apk",
         "apk_url": "/static/naver.apk" if apk.exists() else None,
         "total_novel": n, "total_bab": b,
     })
+
+
+# ═════════════════════════════════════════════════════════════
+#  HALAMAN GALAT (antislop A-05 · R-27: state error harus ada)
+#  Tanpa ini, galat keluar jadi JSON {"detail":"Not Found"} di situs HTML.
+#  Pesan menyebut SEBAB + LANGKAH berikutnya, bukan sekadar "error".
+# ═════════════════════════════════════════════════════════════
+def _hal_galat(request: Request, kode: int, pesan: str, rinci: str):
+    q = request.query_params.get("q", "")
+    return tpl.TemplateResponse(request, "galat.html", {
+        "situs": SITUS, "nama": NAMA, "kanon": str(request.url),
+        "judul": f"{kode}: {pesan} | {NAMA}",
+        "desk": rinci,
+        "kode": kode, "pesan": pesan, "rinci": rinci, "q": q,
+    }, status_code=kode)
+
+
+@app.exception_handler(404)
+async def galat_404(request: Request, exc):
+    return _hal_galat(
+        request, 404, "Halaman tidak ditemukan",
+        "Alamat yang kamu buka tidak ada di arsip ini. "
+        "Mungkin tautannya salah ketik, atau novelnya sudah berganti judul.")
+
+
+@app.exception_handler(500)
+async def galat_500(request: Request, exc):
+    return _hal_galat(
+        request, 500, "Ada gangguan di server",
+        "Server sedang bermasalah saat memuat halaman ini. "
+        "Coba muat ulang sebentar lagi; kalau tetap gagal, kembali ke beranda.")

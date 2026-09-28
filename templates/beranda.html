@@ -1,103 +1,190 @@
 {% extends "base.html" %}
-{% block judul %}{{ nama }} — Baca Novel Terjemahan Indonesia{% endblock %}
+{% block judul %}{{ nama }}: Baca Novel Terjemahan Indonesia Gratis{% endblock %}
 
 {% block isi %}
 
-<!-- HERO (mirip novelpia, warna APK kita) -->
+{# ── 1. HERO BANNER ── #}
+{% if hero %}
+{% set h = hero[0] %}
 <section class="hero">
   <div class="hero-isi">
-    <p class="hero-label">ARKIB PRIBADI · {{ total_novel }} NOVEL</p>
-    <h1 class="hero-judul">Baca Novel Terjemahan<br><em>Sepuasnya</em></h1>
-    <p class="hero-sub">{{ total_novel }} novel · {{ total_bab }} bab · lengkap dengan ilustrasi</p>
-    <div class="hero-aksi">
-      <a class="tombol utama" href="/jelajah">Mulai Baca</a>
-      <a class="tombol" href="/cari">Cari Novel</a>
+    <div class="hero-kiri">
+      <span class="hero-label"><i></i>PILIHAN TERBAIK HARI INI</span>
+      <h1 class="hero-judul">{{ h.judul }}</h1>
+      <p class="hero-sub">{{ h.sinopsis or 'Novel terjemahan pilihan, lengkap dan rapi di arsip Naver.' }}</p>
+      <div class="hero-aksi">
+        <a class="btn btn-utama" href="{{ h.url }}">Baca Sekarang</a>
+        <a class="btn btn-sekunder" href="/jelajah">Jelajahi Katalog</a>
+      </div>
+      <div class="hero-stat">
+        {% if h.rating %}<div><b>{{ h.rating }}</b><span>RATING</span></div>{% endif %}
+        <div><b>{{ h.jumlah_bab }}</b><span>BAB</span></div>
+        <div><b>{{ total_novel }}</b><span>NOVEL</span></div>
+        <div><b>{{ total_bab }}</b><span>BAB TOTAL</span></div>
+      </div>
+    </div>
+    <div class="hero-kanan">
+      {% if hero|length > 2 %}<div class="tumpuk t2"><img src="{{ hero[1].cover }}" alt="" loading="lazy"></div>{% endif %}
+      {% if hero|length > 1 %}<div class="tumpuk t3"><img src="{{ hero[2].cover if hero|length > 2 else hero[1].cover }}" alt="" loading="lazy"></div>{% endif %}
+      <div class="tumpuk t1"><img src="{{ h.cover }}" alt="Cover {{ h.judul }}"></div>
+      <span class="hero-lencana">{% if h.rating %}★ {{ h.rating }} · {% endif %}{{ h.jumlah_bab }} bab</span>
     </div>
   </div>
 </section>
+{% endif %}
 
-<!-- chip tipe -->
-<section class="bagian">
-  <div class="chip-baris">
-    <a class="chip aktif" href="/jelajah">Semua</a>
-    <a class="chip" href="/jelajah?tipe=web">Web Novel</a>
-    <a class="chip" href="/jelajah?tipe=light">Light Novel</a>
-    <a class="chip" href="/jelajah?status=ongoing">Ongoing</a>
-    <a class="chip" href="/jelajah?status=tamat">Tamat</a>
-  </div>
-</section>
-
-<!-- POPULER (grid 2x4) -->
+{# ── 2. PIL TELUSURI GENRE ── #}
+{% if genre %}
 <section class="bagian">
   <div class="bagian-kepala">
-    <h2>Populer</h2><a class="lebih" href="/jelajah?order=populer">Lihat semua →</a>
+    <div><h2>Telusuri Genre</h2><p>Pilih suasana bacaanmu hari ini</p></div>
+    <a class="lebih" href="/jelajah">Semua genre →</a>
   </div>
-  <div class="grid grid-2">
-    {% for n in populer[:4] %}
-    <a class="kartu-lebar" href="{{ n.url }}">
-      <img class="kartu-lebar-cover" src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">
-      <div class="kartu-lebar-isi">
-        <span class="urut">{{ loop.index }}</span>
-        <h3>{{ n.judul }}</h3>
-        <p class="redup">{{ n.jumlah_bab }} bab{% if n.rating %} · ★ {{ n.rating }}{% endif %}</p>
-        <p class="kecil redup">{{ n.status or '' }}{% if n.tipe %} · {{ n.tipe }}{% endif %}</p>
+  <div class="pil-baris">
+    {% for g in genre %}
+    <a class="chip" href="/genre/{{ g.slug }}">{{ g.nama }} <b>{{ g.jumlah }}</b></a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# ── 3. TRENDING ── #}
+{% if trending %}
+<section class="bagian">
+  <div class="bagian-kepala">
+    <div><h2><span class="detak"></span>Trending</h2><p>Paling banyak dibaca pembaca lain</p></div>
+    <a class="lebih" href="/jelajah?order=populer">Lihat semua →</a>
+  </div>
+  <div class="rak">
+    {% for n in trending %}
+    <a class="kartu" href="{{ n.url }}">
+      <div class="kartu-cover">
+        {% if n.cover %}<img src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">
+        {% else %}<div class="tanpa-cover">{{ n.judul[:1] }}</div>{% endif %}
+        {% if n.rating and n.rating >= 1 %}<span class="lencana">★ {{ n.rating }}</span>{% endif %}
       </div>
+      <p class="kartu-judul">{{ n.judul }}</p>
+      <p class="kartu-meta">{{ n.jumlah_bab }} bab</p>
     </a>
     {% endfor %}
   </div>
 </section>
+{% endif %}
 
-<!-- BARU DITAMBAH (rak geser) -->
+{# ── 4. RANDOM NOVEL ── #}
+{% if acak %}
 <section class="bagian">
   <div class="bagian-kepala">
-    <h2>Baru Ditambah</h2><a class="lebih" href="/jelajah?order=baru">Lihat semua →</a>
+    <div><h2>Random Novel</h2><p>Coba keberuntunganmu — temukan cerita baru</p></div>
   </div>
-  <div class="rak" data-geser>
-    {% for n in terbaru %}{% include "_kartu.html" %}{% endfor %}
+  <div class="rak">
+    {% for n in acak %}
+    <a class="kartu" href="{{ n.url }}">
+      <div class="kartu-cover">
+        {% if n.cover %}<img src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">
+        {% else %}<div class="tanpa-cover">{{ n.judul[:1] }}</div>{% endif %}
+        <span class="acak-pil">ACAK</span>
+      </div>
+      <p class="kartu-judul">{{ n.judul }}</p>
+      <p class="kartu-meta">{{ n.jumlah_bab }} bab</p>
+    </a>
+    {% endfor %}
   </div>
 </section>
+{% endif %}
 
-<!-- RANDOM -->
-<section class="bagian">
-  <div class="bagian-kepala"><h2>Random Novel</h2><span class="lebih redup">pilihan hari ini</span></div>
-  <div class="rak" data-geser>
-    {% for n in acak %}{% include "_kartu.html" %}{% endfor %}
-  </div>
-</section>
-
-<!-- ONGOING (carousel kotak) -->
+{# ── 5. BARU DI TAMBAH ── #}
+{% if baru %}
 <section class="bagian">
   <div class="bagian-kepala">
-    <h2>Ongoing</h2><a class="lebih" href="/jelajah?status=ongoing">Lihat semua →</a>
+    <div><h2>Baru di Tambah</h2><p>Judul paling segar di arsip</p></div>
+    <a class="lebih" href="/jelajah?order=baru">Lihat semua →</a>
   </div>
-  <div class="rak" data-geser>
-    {% for n in ongoing %}{% include "_kartu.html" %}{% endfor %}
+  <div class="rak">
+    {% for n in baru %}
+    <a class="kartu" href="{{ n.url }}">
+      <div class="kartu-cover">
+        {% if n.cover %}<img src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">
+        {% else %}<div class="tanpa-cover">{{ n.judul[:1] }}</div>{% endif %}
+        {% if n.rating and n.rating >= 1 %}<span class="lencana">★ {{ n.rating }}</span>
+        {% else %}<span class="bab-pil">{{ n.jumlah_bab }} bab</span>{% endif %}
+      </div>
+      <p class="kartu-judul">{{ n.judul }}</p>
+      <p class="kartu-meta">{{ n.jumlah_bab }} bab</p>
+    </a>
+    {% endfor %}
   </div>
 </section>
+{% endif %}
 
-<!-- TAG POPULER -->
+{# ── 6. LATEST UPDATE ── #}
+{% if update %}
 <section class="bagian">
-  <div class="bagian-kepala"><h2>Tag Populer</h2></div>
+  <div class="bagian-kepala">
+    <div><h2><span class="detak"></span>Latest Update</h2><p>Bab terbaru dari sumber</p></div>
+    <a class="lebih" href="/jelajah?order=baru">Lihat semua →</a>
+  </div>
+  <div class="rak">
+    {% for n in update %}
+    <a class="kartu" href="{{ n.url }}">
+      <div class="kartu-cover">
+        {% if n.cover %}<img src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">
+        {% else %}<div class="tanpa-cover">{{ n.judul[:1] }}</div>{% endif %}
+        <span class="waktu-pil">{{ n.tanggal }}</span>
+      </div>
+      <p class="kartu-judul">{{ n.judul }}</p>
+      <p class="kartu-meta">{{ n.c_bab }} bab</p>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# ── 7. TAMAT ── #}
+{% if tamat %}
+<section class="bagian">
+  <div class="bagian-kepala">
+    <div><h2>Tamat</h2><p>Sudah selesai — baca sampai habis tanpa menunggu</p></div>
+    <a class="lebih" href="/jelajah?status=tamat">Lihat semua →</a>
+  </div>
+  <div class="rak">
+    {% for n in tamat %}
+    <a class="kartu" href="{{ n.url }}">
+      <div class="kartu-cover">
+        {% if n.cover %}<img src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">
+        {% else %}<div class="tanpa-cover">{{ n.judul[:1] }}</div>{% endif %}
+        {% if n.rating and n.rating >= 1 %}<span class="lencana">★ {{ n.rating }}</span>
+        {% else %}<span class="bab-pil">{{ n.jumlah_bab }} bab</span>{% endif %}
+      </div>
+      <p class="kartu-judul">{{ n.judul }}</p>
+      <p class="kartu-meta">{{ n.jumlah_bab }} bab</p>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# ── 8. TAG POPULER (ringkas) ── #}
+{% if tag %}
+<section class="bagian">
+  <div class="bagian-kepala"><div><h2>Tag Populer</h2></div></div>
   <div class="tag-baris">
-    {% for t in tag %}<a class="tag" href="/tag/{{ t.slug }}">{{ t.nama }}<span>{{ t.jumlah_novel }}</span></a>{% endfor %}
+    {% for t in tag[:18] %}
+    <a class="tag" href="/tag/{{ t.slug }}">{{ t.nama }}<span>{{ t.jumlah_novel }}</span></a>
+    {% endfor %}
   </div>
 </section>
+{% endif %}
 
-<!-- GENRE -->
-<section class="bagian">
-  <div class="bagian-kepala"><h2>Genre</h2></div>
-  <div class="tag-baris">
-    {% for g in genre %}<a class="tag" href="/genre/{{ g.slug }}">{{ g.nama }}<span>{{ g.jumlah }}</span></a>{% endfor %}
+{# ── 9. AJAKAN APK (paling bawah) ── #}
+<section class="ajakan">
+  <div>
+    <h2>Baca di mana saja,<br>tanpa koneksi.</h2>
+    <p>Unduh aplikasi Naver untuk Android — simpan novel favoritmu offline dan lanjut baca kapan pun.</p>
   </div>
-</section>
-
-<!-- TAMAT (paling bawah) -->
-<section class="bagian">
-  <div class="bagian-kepala">
-    <h2>Tamat</h2><a class="lebih" href="/jelajah?status=tamat">Lihat semua →</a>
-  </div>
-  <div class="rak" data-geser>
-    {% for n in tamat %}{% include "_kartu.html" %}{% endfor %}
+  <div class="ajakan-aksi">
+    <a class="btn btn-utama" href="/apk">Unduh APK</a>
+    <a class="btn btn-sekunder" href="/apk">Cara pasang</a>
   </div>
 </section>
 
