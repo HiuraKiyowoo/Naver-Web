@@ -131,17 +131,19 @@ def beranda(request: Request):
     baru = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
         "ORDER BY created_at DESC LIMIT 10")]
-    # LATEST UPDATE: pakai MAX(bab.tanggal) — waktu_update KOSONG di 478/495 novel.
-    # ⚠️ JANGAN pakai "GROUP BY n.id + MAX()" → 12 detik (pindai 111.680 bab).
-    #    Cara cepat: ambil 60 bab terbaru (kena index idx_bab_tanggal, 0,01 dtk),
-    #    baru ambil novel uniknya. Lihat tambah-index-tanggal.py.
+    # LATEST UPDATE: pakai bab.tanggal (waktu_update KOSONG di 478/495 novel).
+    # ⚠️ JANGAN "GROUP BY n.id + MAX()" → 12 dtk (pindai 111.680 bab).
+    #    Dan ⚠️ JANGAN ambil cuma 60 bab terbaru: 110 bab terakhir bisa dari
+    #    SATU novel saja (mis. n1987 tanggal 27 Sep) → hasil cuma 1 novel.
+    #    Ambil 400 bab (kena index idx_bab_tanggal, tetap ~0,01 dtk), lalu
+    #    ambil novel unik sampai dapat 10.
     update, sudah = [], set()
     for r in ambil("""
         SELECT b.tanggal AS tg, n.*
         FROM bab b JOIN novel n ON n.id = b.novel_id
         WHERE b.tanggal IS NOT NULL AND b.tanggal != ''
           AND n.cover_webp IS NOT NULL AND n.judul != ''
-        ORDER BY b.tanggal DESC LIMIT 60"""):
+        ORDER BY b.tanggal DESC LIMIT 400"""):
         if r["id"] in sudah:
             continue
         sudah.add(r["id"])
