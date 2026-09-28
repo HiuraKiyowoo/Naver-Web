@@ -92,6 +92,9 @@ def kartu(r, dasar="") -> dict:
         "cover": f"/cover/{r['id']}.webp" if r["cover_webp"] else None,
         "jumlah_bab": r["jumlah_bab"], "rating": r["rating"],
         "status": r["status"], "tipe": r["tipe"], "country": r["country"],
+        # bookmark dipakai kartu gaya novelpia ("1.6K pembaca") — 148/495 novel
+        # bookmark-nya 0, jadi kartu wajib cek >0 dulu sebelum menampilkannya.
+        "bookmark": r["bookmark"] if "bookmark" in r.keys() else None,
         "url": f"/novel/{r['slug']}",
     }
 
@@ -168,12 +171,21 @@ def beranda(request: Request):
         GROUP BY g.id ORDER BY jumlah DESC LIMIT 18""")]
     tag = [dict(r) for r in ambil(
         "SELECT slug, nama, jumlah_novel FROM tag ORDER BY jumlah_novel DESC LIMIT 24")]
+    # RATING TERTINGGI (padanan "Premium Originals" novelpia) — rating >= 4.5
+    premium = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "AND COALESCE(rating,0) >= 4.5 "
+        "ORDER BY rating DESC, COALESCE(bookmark,0) DESC LIMIT 12")]
+    # BARU DIBUKA (padanan "Recently Opened") — id terbaru
+    dibuka = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "ORDER BY id DESC LIMIT 12")]
     return tpl.TemplateResponse(request, "beranda.html", {
         "situs": SITUS, "nama": NAMA, "desk": DESK,
         "kanon": str(request.url), "total_novel": n, "total_bab": b,
         "hero": hero, "trending": trending, "acak": acak, "baru": baru,
         "update": update, "tamat": tamat, "ongoing": ongoing,
-        "genre": genre, "tag": tag,
+        "genre": genre, "tag": tag, "premium": premium, "dibuka": dibuka,
     })
 
 

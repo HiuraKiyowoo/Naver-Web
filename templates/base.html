@@ -10,12 +10,17 @@
 <meta property="og:title" content="{{ judul|default(nama) }}">
 <meta property="og:description" content="{{ desk|default('') }}">
 <meta property="og:site_name" content="{{ nama }}">
-<meta name="theme-color" content="#071018">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="/static/ikon.svg">
+{# font lokal (novelpia pakai Noto Sans + Pretendard). Salinan font ada di
+   /static/font/ supaya tidak bergantung CDN & huruf KR/JP tampil benar. #}
+<link rel="preload" href="/static/font/NotoSans.ttf" as="font" type="font/ttf" crossorigin>
 {# versi CSS ikut mtime berkas → setiap design berubah, Cloudflare & browser
    otomatis ambil yang baru (pelajaran 28 Sep: CF cache 4 jam bikin CSS basi) #}
 <link rel="preload" href="/static/web.css?v={{ versi_aset() }}" as="style">
 <link rel="stylesheet" href="/static/web.css?v={{ versi_aset() }}">
+{# lapisan gaya MENIRU novelpia (dipasang SETELAH web.css supaya menimpa) #}
+<link rel="stylesheet" href="/static/tema-novelpia.css?v={{ versi_aset() }}">
 </head>
 <body>
 <header class="kepala">
