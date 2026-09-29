@@ -962,3 +962,15 @@ body.ada-kunci{
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .pustaka-teks span{ font-size:11px; color:#8FA3B8; }
 .pustaka-lanjut{ font-size:11.5px; color:#38BDF8; flex:0 0 auto; }
+
+/* ══ TOMBOL FAVORIT (♥) ══ */
+.tombol-hati{ display:inline-flex; align-items:center; gap:7px;
+  background:rgba(255,255,255,.06); color:#CFE2F3;
+  border:1px solid rgba(160,200,240,.12); }
+.tombol-hati .hati{ font-size:15px; line-height:1; color:#8FA3B8; }
+.tombol-hati:hover{ background:rgba(4,157,253,.16); border-color:rgba(4,157,253,.32); }
+.tombol-hati.aktif{ background:rgba(233,74,116,.15); border-color:rgba(233,74,116,.38); color:#FF8FB1; }
+.tombol-hati.aktif .hati{ color:#FF5C8A; }
+.tombol-hati.sedang{ opacity:.6; pointer-events:none; }
+.tombol-hati.pop{ animation:hatiPop .34s ease; }
+@keyframes hatiPop{ 0%{transform:scale(1)} 45%{transform:scale(1.14)} 100%{transform:scale(1)} }

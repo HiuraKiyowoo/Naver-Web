@@ -58,6 +58,13 @@
         <a class="tombol tombol-utama" href="/novel/{{ n.slug }}/bab/{{ bab[0].urutan }}">Baca Bab 1</a>
         <a class="tombol tombol-abu" href="#daftar-bab">Daftar Bab</a>
         {% endif %}
+        <button type="button" class="tombol tombol-hati{% if favorit %} aktif{% endif %}"
+                id="btnFavorit" data-novel="{{ n.id }}"
+                aria-pressed="{{ 'true' if favorit else 'false' }}"
+                title="{% if pengguna %}Simpan ke Pustaka{% else %}Masuk untuk menyimpan{% endif %}">
+          <span class="hati">{% if favorit %}♥{% else %}♡{% endif %}</span>
+          <span class="hati-teks">{% if favorit %}Tersimpan{% else %}Favorit{% endif %}</span>
+        </button>
       </div>
     </div>
   </div>

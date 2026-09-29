@@ -330,3 +330,49 @@
 (function(){
   if (document.querySelector('.kunci')) document.body.classList.add('ada-kunci');
 })();
+
+
+/* ══════════════════════════════════════════════════════════
+   TOMBOL FAVORIT (♥) di halaman detail novel
+   ══════════════════════════════════════════════════════════ */
+(function(){
+  var b = document.getElementById('btnFavorit');
+  if (!b) return;
+  var hati = b.querySelector('.hati');
+  var teks = b.querySelector('.hati-teks');
+  var novelId = b.getAttribute('data-novel');
+  var sibuk = false;
+
+  function pasang(aktif){
+    b.classList.toggle('aktif', aktif);
+    b.setAttribute('aria-pressed', aktif ? 'true' : 'false');
+    if (hati) hati.textContent = aktif ? '\u2665' : '\u2661';
+    if (teks) teks.textContent = aktif ? 'Tersimpan' : 'Favorit';
+  }
+
+  b.addEventListener('click', function(){
+    if (sibuk) return;
+    sibuk = true;
+    b.classList.add('sedang');
+    fetch('/api/favorit', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({novel_id: Number(novelId)})
+    }).then(function(r){
+      if (r.status === 401) {           // belum masuk → ke halaman masuk
+        var lanjut = encodeURIComponent(location.pathname);
+        location.href = '/masuk?lanjut=' + lanjut;
+        return null;
+      }
+      return r.json();
+    }).then(function(d){
+      if (d && d.ok) pasang(d.favorit);
+      sibuk = false;
+      b.classList.remove('sedang');
+    }).catch(function(){
+      sibuk = false;
+      b.classList.remove('sedang');
+    });
+  });
+})();

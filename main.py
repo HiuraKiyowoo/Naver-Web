@@ -342,6 +342,8 @@ def novel(request: Request, slug: str):
         "genre": genre, "tag": tag, "bab": bab, "serupa": serupa,
         "jlh_bab": len(bab),
         "pengguna": getattr(request.state, "pengguna", None),
+        "favorit": (auth.favorit_ada(request.state.pengguna["id"], r["id"])
+                    if getattr(request.state, "pengguna", None) else False),
     })
 
 
@@ -488,6 +490,34 @@ def api_auth_me(request: Request):
                          "pengguna": {"nama": p["nama"], "email": p["email"], "foto": p["foto"]}})
 
 
+
+
+# ══════════════════════════════════════════════════════════════
+#  FAVORIT — tambah / buang (wajib masuk)
+# ══════════════════════════════════════════════════════════════
+@app.post("/api/favorit")
+async def api_favorit(request: Request):
+    pengguna = getattr(request.state, "pengguna", None)
+    if not pengguna:
+        return JSONResponse({"ok": False, "pesan": "masuk_dulu"}, status_code=401)
+    try:
+        isi = await request.json()
+        novel_id = int(isi.get("novel_id") or 0)
+    except Exception:
+        return JSONResponse({"ok": False, "pesan": "data_salah"}, status_code=400)
+    if not novel_id:
+        return JSONResponse({"ok": False, "pesan": "novel_id_kosong"}, status_code=400)
+    ada = ambil("SELECT 1 FROM novel WHERE id=?", (novel_id,), satu=True)
+    if not ada:
+        return JSONResponse({"ok": False, "pesan": "novel_tidak_ada"}, status_code=404)
+    if auth.favorit_ada(pengguna["id"], novel_id):
+        auth.favorit_buang(pengguna["id"], novel_id)
+        sekarang = False
+    else:
+        auth.favorit_tambah(pengguna["id"], novel_id)
+        sekarang = True
+    jml = len(auth.daftar_favorit(pengguna["id"]))
+    return JSONResponse({"ok": True, "favorit": sekarang, "jumlah": jml})
 @app.post("/keluar")
 @app.get("/keluar")
 def keluar(request: Request):
