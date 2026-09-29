@@ -28,36 +28,15 @@
     <a class="logo logo-gambar" href="/" aria-label="{{ nama }} — beranda">
       <img src="/static/img/logo-320.png" alt="{{ nama }}" width="320" height="197" class="logo-img">
     </a>
-    <button class="hamburger" id="btnLaci" aria-label="Buka menu" aria-expanded="false" aria-controls="laci">
+    <button class="hamburger" id="btnLaci" data-drawer-open aria-label="Buka menu" aria-expanded="false" aria-controls="nnDrawer">
       <span></span><span></span><span></span>
     </button>
   </div>
 </header>
 
 {# ── LACI SAMPING (semua menu) ── #}
-<div class="laci-tirai" id="laciTirai" hidden></div>
-<aside class="laci" id="laci" aria-label="Menu utama" aria-hidden="true">
-  <div class="laci-kepala">
-    <span class="logo logo-gambar logo-kecil" aria-hidden="true">
-      <img src="/static/img/logo-320.png" alt="" width="320" height="197" class="logo-img">
-    </span>
-    <button class="laci-tutup" id="btnLaciTutup" aria-label="Tutup menu">&times;</button>
-  </div>
-  <nav class="laci-nav">
-    <a href="/"{% if halaman == 'beranda' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">⌂</span> Home</a>
-    <a href="/jelajah"{% if halaman in ('jelajah','daftar','cari','genre','tag') %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">◎</span> Jelajah</a>
-    <a href="/pustaka"{% if halaman == 'pustaka' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">▤</span> Pustaka</a>
-    <a href="/profil"{% if halaman == 'profil' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">☺</span> Profil / Akun</a>
-
-      {% if admin %}
-      <a class="laci-taut laci-admin" href="/panel">
-        <span class="laci-ikon">⚙</span><span>Admin</span>
-      </a>
-      {% endif %}
-    <a href="/request"{% if halaman == 'request' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">✦</span> Request</a>
-  </nav>
-  <div class="laci-kaki">Arsip pribadi novel terjemahan</div>
-</aside>
+{# versi baru 29 Sep: berkas sendiri _drawer.html, kiriman user + 4 penyesuaian #}
+{% include "_drawer.html" %}
 
 
 {% block isi %}{% endblock %}

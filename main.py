@@ -109,8 +109,11 @@ tpl = Jinja2Templates(directory=str(BASE / "templates"))
 
 
 # ═══════════ PANEL ADMIN (rahasia) ═══════════
-# Pembungkus tipis: setiap render template otomatis mendapat 'admin' True/False,
-# supaya base.html bisa memakai {% if admin %} tanpa mengubah route satu per satu.
+# Pembungkus tipis: setiap render template otomatis mendapat:
+#   'admin'    → True/False (email termasuk admin?)
+#   'pengguna' → dict pengguna dari sesi (nama/email/foto) atau None kalau tamu
+# supaya laci (base.html → _drawer.html) menampilkan profil di SEMUA halaman
+# tanpa perlu tiap route mengirim 'pengguna' sendiri-sendiri.
 _TR_ASLI = tpl.TemplateResponse
 
 # Admin bawaan (dipakai kalau env NAVER_ADMIN_EMAIL kosong)
@@ -157,12 +160,29 @@ def _TR(*a, **k):
 
     nilai = bool(_admin_masuk(req))
 
+    # pengguna dari sesi (dict: nama/email/foto/…) — None untuk tamu.
+    # Hanya ditambahkan kalau route BELUM mengirim 'pengguna', supaya
+    # route yang mengirim versi sendiri (masuk.html) tidak tertimpa.
+    try:
+        _peng = getattr(getattr(req, "state", None), "pengguna", None)
+    except Exception:
+        _peng = None
+
+    def _tanpa_pengguna(d):
+        return isinstance(d, dict) and "pengguna" not in d
+
     if idk == -1:
-        k = {**k, "context": {**k["context"], "admin": nilai}}
+        ctx = {**k["context"]}
+        if _tanpa_pengguna(ctx):
+            ctx["pengguna"] = _peng
+        k = {**k, "context": {**ctx, "admin": nilai}}
     elif idk is not None:
-        a = a[:idk] + ({**a[idk], "admin": nilai},) + a[idk + 1:]
+        d = {**a[idk]}
+        if _tanpa_pengguna(d):
+            d["pengguna"] = _peng
+        a = a[:idk] + ({**d, "admin": nilai},) + a[idk + 1:]
     elif len(a) >= 2:
-        a = (a[0], {"request": req, "admin": nilai}) + a[1:]
+        a = (a[0], {"request": req, "admin": nilai, "pengguna": _peng}) + a[1:]
 
     return _TR_ASLI(*a, **k)
 

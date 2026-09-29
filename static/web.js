@@ -320,28 +320,10 @@ function bacaBalasan(r) {
     segar();
   })();
 
-  /* ══ NAV SAMPING: buka/tutup laci (hamburger) ══ */
-  (function () {
-    var laci = document.getElementById('laci');
-    var tirai = document.getElementById('laciTirai');
-    var buka = document.getElementById('btnLaci');
-    var tutup = document.getElementById('btnLaciTutup');
-    if (!laci || !buka) return;
-    function setel(aktif) {
-      laci.classList.toggle('laci-buka', aktif);
-      laci.setAttribute('aria-hidden', aktif ? 'false' : 'true');
-      buka.setAttribute('aria-expanded', aktif ? 'true' : 'false');
-      document.body.classList.toggle('laci-ada', aktif);
-      if (tirai) tirai.hidden = !aktif;
-      if (aktif && tutup) { try { tutup.focus(); } catch (e) {} }
-    }
-    buka.addEventListener('click', function () { setel(true); });
-    if (tutup) tutup.addEventListener('click', function () { setel(false); });
-    if (tirai) tirai.addEventListener('click', function () { setel(false); });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && laci.classList.contains('laci-buka')) setel(false);
-    });
-  })();
+  /* ══ NAV SAMPING ══
+     ⚠️ 29 Sep: logika buka/tutup laci dipindah ke dalam templates/_drawer.html
+     (berkas laci baru punya skripnya sendiri). Blok lama dihapus supaya
+     tidak ada dua skrip berebut elemen yang sama. */
 })();
 
 
