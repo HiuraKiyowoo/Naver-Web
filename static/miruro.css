@@ -26,7 +26,11 @@
 
 /* ── dasar ── */
 * { box-sizing: border-box; }
-html { background: var(--bg); }
+html { background: var(--bg); overflow-x: hidden; }
+/* ⚠️ PELAJARAN 29 Sep: halaman PUNYA scroll horizontal karena .hero-item
+   (margin 0 -10px) & .hero-track (padding 8px 6%) lebih lebar dari layar
+   → semua section jadi kelihatan "geser" + ada gap kanan. Dikunci di sini. */
+body { overflow-x: hidden; }
 body {
   margin: 0; background: var(--bg) !important; color: var(--putih);
   font-family: 'Quicksand', 'Noto Sans', system-ui, -apple-system, sans-serif;
@@ -98,13 +102,16 @@ img { display: block; }
      transform: translateY(|i-1.5|*7px) rotate((i-1.5)*7deg)
    5 kartu: -2,-1,0,1,2 → rotasi -14°, -7°, 0°, +7°, +14° */
 /* ── KIPAS "Jelajahi Acak" ──
-   ⚠️ PELAJARAN 29 Sep: ukuran px tetap bikin kipas (312px) lebih SEMPIT dari
-   container → gap kanan-kiri 19-39px, kelihatan "kartunya kurang gede".
-   Sekarang: kartu = lebar .fan / 3  ·  step = kartu / 2
-     → bentang = kartu + 4*step = kartu + 2*kartu = 3*kartu = LEBAR .fan ✔
-   Posisi dihitung dari TENGAH supaya selalu simetris. */
-.fan{position:relative;height:215px;margin:0 16px;
-  --k:calc((100% - 0px)/3); --s:calc(var(--k)/2)}
+   ⚠️ PELAJARAN 29 Sep (2 kali salah):
+   1) ukuran px tetap (104px/52px) → kipas cuma 312px, container lebih lebar
+      → GAP kanan-kiri 19-39px, kelihatan "kartu kurang gede".
+   2) kipas dibuat MENGISI penuh (kartu = 100%/3) → kartu paling pinggir
+      kena ROTASI keluar batas → muncul scrollbar horizontal → SEMUA SECTION
+      IKUT GESER + gap kanan gede.
+   Sisa 26px dibiarkan TERBUKA (JANGAN pakai overflow di .fan → kartu
+   pinggir KEPOTONG). Halaman sudah dikunci: html/body overflow-x:hidden. */
+.fan{position:relative;height:215px;margin:0 14px;
+  --k:calc((100% - 26px)/3); --s:calc(var(--k)/2)}
 .fi{position:absolute;bottom:0;width:var(--k);transform-origin:50% 100%;
   left:calc((100% - var(--k))/2); margin-left:calc((var(--i) - 2) * var(--s))}
 .fi img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:8px;box-shadow:0 10px 24px rgba(20,25,60,.3)}
