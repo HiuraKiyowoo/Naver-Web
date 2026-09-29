@@ -328,6 +328,7 @@ def beranda(request: Request):
         "update": update, "tamat": tamat, "ongoing": ongoing,
         "genre": genre, "tag": tag, "premium": premium,
         "light": light, "webnovel": webnovel, "minggu": minggu,
+        "gambar_og": SITUS + "/static/img/logo.png",
     })
 
 
@@ -426,7 +427,7 @@ def bab(request: Request, slug: str, urutan: int):
     return tpl.TemplateResponse(request, "bab.html", {
         "situs": SITUS, "halaman": "bab", "batas_bab": auth.BATAS_TAMU, "nama": NAMA,
         "judul": f"{b['judul']}: {n['judul']} | {NAMA}",
-        "desk": (b["teks"] or "")[:150],
+        "desk": "Baca bab {} · {} — {} di {}.".format(urutan, (b["judul"] or "")[:80], (n["judul"] or "")[:70], NAMA),
         "kanon": f"{SITUS}/novel/{slug}/bab/{urutan}",
         "n": dict(n), "b": dict(b), "paragraf": teks, "gambar": gmb,
         "sebelum": sebelum, "sesudah": sesudah, "semua_bab": semua_bab,
@@ -434,6 +435,7 @@ def bab(request: Request, slug: str, urutan: int):
         "gerbang_dasar": gerbang_dasar,
         "pengguna": pengguna,
         "sudah": _sudah_dibaca(request, n["id"]),
+        "gambar_og": (gmb[0]["sumber"] if gmb and gmb[0].get("sumber") else None),
         "bab_awal": [dict(x) for x in ambil(
             "SELECT urutan, judul FROM bab WHERE novel_id=? ORDER BY urutan LIMIT ?",
             (n["id"], auth.BATAS_TAMU))] if gerbang_dasar else [],
@@ -917,12 +919,68 @@ def robots():
         f"Sitemap: {SITUS}/sitemap.xml\n")
 
 
-@app.get("/status")
-def status():
-    n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
-    b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
-    g = ambil("SELECT COUNT(*) c FROM bab_gambar", satu=True)["c"]
-    return {"aplikasi": "Naver Web", "novel": n, "bab": b, "gambar": g}
+def _stat_ringkas():
+    """angka ringkas arsip — dipakai halaman /status DAN api /api/status"""
+    def _satu(q, par=()):
+        try:
+            r = ambil(q, par, satu=True)
+            return (r["c"] or 0) if r else 0
+        except Exception:
+            return 0
+    return {
+        "novel": _satu("SELECT COUNT(*) c FROM novel"),
+        "bab": _satu("SELECT COUNT(*) c FROM bab"),
+        "gambar": _satu("SELECT COUNT(*) c FROM bab_gambar"),
+        "genre": _satu("SELECT COUNT(*) c FROM genre"),
+        "tag": _satu("SELECT COUNT(*) c FROM tag"),
+        "huruf": _satu("SELECT SUM(LENGTH(COALESCE(isi,''))) c FROM bab"),
+        "ilustrasi": _satu("SELECT COUNT(DISTINCT b.novel_id) c FROM bab b "
+                           "JOIN bab_gambar g ON g.bab_id=b.id"),
+        "bersampul": _satu("SELECT COUNT(*) c FROM novel WHERE cover_webp IS NOT NULL"),
+        "sudah_tamat": _satu("SELECT COUNT(*) c FROM novel "
+                             "WHERE LOWER(COALESCE(status,'')) LIKE '%complete%'"),
+        "masih_jalan": _satu("SELECT COUNT(*) c FROM novel "
+                             "WHERE LOWER(COALESCE(status,'')) LIKE '%ongoing%'"),
+    }
+
+
+@app.get("/api/status")
+def api_status():
+    """angka mentah (JSON) — dipakai footer / pemantau"""
+    s = _stat_ringkas()
+    return {"aplikasi": "Naver Web", "novel": s["novel"],
+            "bab": s["bab"], "gambar": s["gambar"]}
+
+
+@app.get("/status", response_class=HTMLResponse)
+def halaman_status(request: Request):
+    """HALAMAN status: isi arsip apa adanya + request pengguna"""
+    s = _stat_ringkas()
+    try:
+        req_jml = len(auth.permintaan_daftar(None, batas=9999))
+        req = auth.permintaan_daftar(None, batas=12)
+    except Exception:
+        req_jml, req = 0, []
+    try:
+        teratas = [dict(x) for x in ambil(
+            "SELECT id, slug, judul, jumlah_bab FROM novel "
+            "WHERE cover_webp IS NOT NULL ORDER BY jumlah_bab DESC LIMIT 8")]
+    except Exception:
+        teratas = []
+    try:
+        a = ambil("SELECT MAX(tanggal) t FROM bab", satu=True)
+        akhir = a["t"] if a else None
+    except Exception:
+        akhir = None
+    return tpl.TemplateResponse(request, "status.html", {
+        "situs": SITUS, "halaman": "status", "nama": NAMA,
+        "judul": "Status Arsip: " + NAMA,
+        "desk": "Jumlah novel, bab, dan ilustrasi di arsip Naver.",
+        "kanon": SITUS + "/status",
+        "s": s, "req": req, "req_jml": req_jml,
+        "teratas": teratas, "akhir": akhir,
+        "pengguna": getattr(request.state, "pengguna", None),
+    })
 
 
 @app.get("/apk", response_class=HTMLResponse)

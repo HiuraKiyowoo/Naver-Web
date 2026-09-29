@@ -69,6 +69,62 @@
   <div class="kosong">
     <b>Tidak ada hasil</b>
     <span>Coba ubah saringan atau kata kunci.</span>
+    {# D) kalau yang dicari tidak ada → tawarkan Request #}
+    <div class="kosong-aksi">
+      <a class="tombol tombol-utama" href="/request?judul={{ q|urlencode }}">✦ Request novel ini</a>
+      <a class="tombol tombol-abu" href="/jelajah">Reset saringan</a>
+    </div>
+    <p class="redup" style="margin-top:14px">
+      Yang dicari belum ada di arsip? Kirim lewat menu <b>Request</b> — nanti aku cek.
+    </p>
+  </div>
+  {% endif %}
+
+  {# ── A) PAGINASI HALAMAN ── #}
+  {% if total_hal and total_hal > 1 %}
+  {% set dasar = '/jelajah?order=' ~ order
+     ~ ('&q=' ~ q if q else '')
+     ~ ('&status=' ~ status if status else '')
+     ~ ('&tipe=' ~ tipe if tipe else '')
+     ~ ('&genre=' ~ genre if genre else '')
+     ~ ('&tag=' ~ tag if tag else '')
+     ~ ('&negara=' ~ negara if negara else '') %}
+  <nav class="hal-nav" aria-label="Halaman">
+    {% if page > 1 %}
+    <a class="hal-tombol" href="{{ dasar }}&page={{ page - 1 }}" rel="prev">‹ Sebelumnya</a>
+    {% else %}
+    <span class="hal-tombol hal-mati">‹ Sebelumnya</span>
+    {% endif %}
+
+    <div class="hal-angka">
+      {% set mulai = [1, page - 2]|max %}
+      {% set akhir = [total_hal, mulai + 4]|min %}
+      {% set mulai = [1, akhir - 4]|max %}
+      {% if mulai > 1 %}
+      <a class="hal-angka-item" href="{{ dasar }}&page=1">1</a>
+      {% if mulai > 2 %}<span class="hal-titik">…</span>{% endif %}
+      {% endif %}
+      {% for p in range(mulai, akhir + 1) %}
+      {% if p == page %}
+      <span class="hal-angka-item aktif" aria-current="page">{{ p }}</span>
+      {% else %}
+      <a class="hal-angka-item" href="{{ dasar }}&page={{ p }}">{{ p }}</a>
+      {% endif %}
+      {% endfor %}
+      {% if akhir < total_hal %}
+      {% if akhir < total_hal - 1 %}<span class="hal-titik">…</span>{% endif %}
+      <a class="hal-angka-item" href="{{ dasar }}&page={{ total_hal }}">{{ total_hal }}</a>
+      {% endif %}
+    </div>
+
+    {% if page < total_hal %}
+    <a class="hal-tombol" href="{{ dasar }}&page={{ page + 1 }}" rel="next">Berikutnya ›</a>
+    {% else %}
+    <span class="hal-tombol hal-mati">Berikutnya ›</span>
+    {% endif %}
+  </nav>
+  <div class="hal-info">
+    Halaman {{ page }} dari {{ total_hal }} · {{ '{:,}'.format(total).replace(',', '.') }} novel
   </div>
   {% endif %}
 

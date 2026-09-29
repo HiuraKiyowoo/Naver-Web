@@ -1030,3 +1030,52 @@ body.ada-kunci{
 .req-status-dikerjakan{ background:rgba(240,190,60,.16); color:#F2CE72; }
 .req-status-selesai{ background:rgba(79,209,165,.16); color:#63D9B0; }
 .req-status-ditolak{ background:rgba(255,107,138,.15); color:#FF8FB1; }
+
+/* ══ PAGINASI HALAMAN (jelajah & cari) ══ */
+.hal-nav{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin:30px 0 10px; flex-wrap:wrap; }
+.hal-tombol{ font-size:12.5px; font-weight:600; padding:9px 15px; border-radius:9px;
+  background:rgba(255,255,255,.05); color:#BFD6E8; text-decoration:none;
+  border:1px solid rgba(160,200,240,.1); transition:.16s; white-space:nowrap; }
+a.hal-tombol:hover{ background:rgba(4,157,253,.16); border-color:rgba(4,157,253,.32); color:#DFF0FF; }
+.hal-tombol.hal-mati{ opacity:.32; pointer-events:none; }
+.hal-angka{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; justify-content:center; }
+.hal-angka-item{ min-width:32px; height:32px; line-height:32px; text-align:center; padding:0 7px;
+  font-size:12.5px; font-weight:600; border-radius:8px; color:#9FB4C8; text-decoration:none;
+  background:rgba(255,255,255,.04); transition:.16s; }
+a.hal-angka-item:hover{ background:rgba(4,157,253,.16); color:#DFF0FF; }
+.hal-angka-item.aktif{ background:#049DFD; color:#04121C; }
+.hal-titik{ color:#5F7387; font-size:12px; padding:0 2px; }
+.hal-info{ text-align:center; font-size:11.5px; color:#5F7387; margin-bottom:22px; }
+
+/* ══ HALAMAN STATUS ══ */
+.stat-petak{ display:grid; grid-template-columns:repeat(3,1fr); gap:11px; margin-bottom:20px; }
+.stat-kotak{ background:rgba(255,255,255,.035); border:1px solid rgba(160,200,240,.075);
+  border-radius:12px; padding:20px 14px; text-align:center; }
+.stat-kotak b{ display:block; font-size:25px; font-weight:800; color:#E8F3FB;
+  letter-spacing:-.5px; font-family:Quicksand,sans-serif; }
+.stat-kotak span{ display:block; font-size:11px; color:#7E93A7; margin-top:5px;
+  text-transform:uppercase; letter-spacing:.6px; }
+.stat-kotak.stat-utama b{ color:#5CC8FF; }
+.stat-rinci{ padding:18px 20px; }
+.stat-judul{ font-size:13px; font-weight:700; color:#C9DCEB; margin:0 0 12px;
+  letter-spacing:.3px; text-transform:uppercase; }
+.stat-baris{ display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:9px 0; border-bottom:1px solid rgba(160,200,240,.055); font-size:13px; }
+.stat-baris:last-child{ border-bottom:0; }
+.stat-baris span{ color:#9FB4C8; }
+.stat-baris b{ color:#E2EFF9; font-weight:600; }
+.stat-daftar{ display:flex; flex-direction:column; gap:1px; }
+.stat-item{ display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:11px 14px; background:rgba(255,255,255,.03); border-radius:8px;
+  text-decoration:none; transition:.15s; }
+.stat-item:hover{ background:rgba(4,157,253,.1); }
+.stat-item-judul{ font-size:13px; color:#DCE9F4; font-weight:600; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.stat-item-angka{ font-size:11.5px; color:#7FB6D8; flex-shrink:0; font-weight:600; }
+.stat-catatan{ margin-top:26px; font-size:11.5px; line-height:1.6; }
+.kosong-aksi{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+@media (max-width:520px){
+  .stat-petak{ grid-template-columns:1fr; }
+  .hal-nav{ justify-content:center; }
+}

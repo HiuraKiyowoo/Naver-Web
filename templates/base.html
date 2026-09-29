@@ -6,7 +6,8 @@
 <title>{% block judul %}{{ judul|default(nama) }}{% endblock %}</title>
 <meta name="description" content="{{ desk|default('') }}">
 <link rel="canonical" href="{{ kanon|default(situs) }}">
-{% if gambar_og %}<meta property="og:image" content="{{ gambar_og }}">{% endif %}
+{% if gambar_og %}{% set og_url = (situs + gambar_og) if gambar_og[:4] != 'http' else gambar_og %}
+<meta property="og:image" content="{{ og_url }}">{% endif %}
 <meta property="og:title" content="{{ judul|default(nama) }}">
 <meta property="og:description" content="{{ desk|default('') }}">
 <meta property="og:site_name" content="{{ nama }}">
