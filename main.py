@@ -232,6 +232,7 @@ def beranda(request: Request):
         GROUP BY g.id ORDER BY jumlah DESC LIMIT 18""")]
     tag = [dict(r) for r in ambil(
         "SELECT slug, nama, jumlah_novel FROM tag ORDER BY jumlah_novel DESC LIMIT 24")]
+
     # RATING TERTINGGI — ambang 4.2 (112 novel, SEMUA benar-benar berating).
     # Dulu ambang 4.5 → cuma 43 novel, dan daftarnya bercampur novel rating 0
     # yang ikut terurut di bawah → tidak jujur.
@@ -239,13 +240,38 @@ def beranda(request: Request):
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
         "AND COALESCE(rating,0) >= 4.2 "
         "ORDER BY rating DESC, jumlah_bab DESC LIMIT 12")]
+
+    # ═══════════════════════════════════════════════════════════════
+    #  MINGGU INI  —  section sorotan gaya "Opening Story" (3 cover)
+    #  ⚠️ status di dB = 'Completed' (C BESAR!) — 'completed' hasilnya 0.
+    #  Saring cover_webp IS NOT NULL → 21 dari 207 novel Completed tidak
+    #  punya cover (kalau tidak disaring, muncul gambar rusak).
+    #  Daftar diambil 8 novel; JS (web.js) yang menggeser Prev/Next dengan
+    #  memutar indeks melingkar, dan cover tetangga ikut berputar.
+    # ═══════════════════════════════════════════════════════════════
+    minggu = []
+    for r in ambil(
+        "SELECT id, slug, judul, COALESCE(NULLIF(author,''), penulis) AS penulis, "
+        "sinopsis, jumlah_bab, rating FROM novel "
+        "WHERE status='Completed' AND cover_webp IS NOT NULL AND judul != '' "
+        "ORDER BY rating DESC, jumlah_bab DESC LIMIT 8"):
+        mg = dict(r)
+        mg["cover"] = f"/cover/{r['id']}.webp"
+        mg["url"] = f"/novel/{r['slug']}"
+        mg["tags"] = [t["nama"] for t in ambil(
+            "SELECT t.nama FROM tag t JOIN novel_tag nt ON nt.tag_id=t.id "
+            "WHERE nt.novel_id=? ORDER BY t.jumlah_novel DESC LIMIT 5", (r["id"],))]
+        mg["desk"] = (r["sinopsis"] or "").strip()
+        mg["penulis"] = mg["penulis"] or "Tanpa Penulis"
+        minggu.append(mg)
+
     return tpl.TemplateResponse(request, "beranda.html", {
         "situs": SITUS, "halaman": "beranda", "nama": NAMA, "desk": DESK,
         "kanon": str(request.url), "total_novel": n, "total_bab": b,
         "hero": hero, "acak": acak, "baru": baru,
         "update": update, "tamat": tamat, "ongoing": ongoing,
         "genre": genre, "tag": tag, "premium": premium,
-        "light": light, "webnovel": webnovel,
+        "light": light, "webnovel": webnovel, "minggu": minggu,
     })
 
 

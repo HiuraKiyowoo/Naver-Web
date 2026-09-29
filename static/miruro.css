@@ -527,3 +527,72 @@ img { display: block; }
   .fan{height:196px;margin:0 12px}
   .fi .bd{font-size:9px;padding:2px 6px;left:5px;top:5px}
 }
+
+/* ══════════════════════════════════════════════════════════════
+   MINGGU INI — section sorotan gaya "Opening Story" (3 cover)
+   ⚠️ Warna diubah dari ungu bawaan (#8A5CD6/#B79CE8) ke TEMA KITA
+      (charcoal + cyan) supaya nyatu. Pil tag TANPA garis (border:0).
+   ══════════════════════════════════════════════════════════════ */
+.mg-section { padding: 0 0 10px; }
+.mg-eyebrow { display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin: 0 14px 16px; padding-bottom: 11px;
+  border-bottom: 1px solid var(--garis); }
+.mg-eyebrow h2 { font-size: 17px; font-weight: 800; letter-spacing: -.01em;
+  margin: 0; color: var(--putih); }
+.mg-eyebrow a { color: var(--samar); font-weight: 800; font-size: 11.5px;
+  text-decoration: none; text-transform: uppercase; letter-spacing: .1em; }
+.mg-eyebrow a:hover { color: var(--cyan); }
+
+/* ── 3 cover: kiri redup · tengah besar · kanan redup ── */
+.mg-stage { display: grid; grid-template-columns: 74px 1fr 74px;
+  align-items: center; column-gap: 10px; margin: 0 14px 18px; }
+.mg-cov { position: relative; display: block; border-radius: 7px; overflow: hidden;
+  background: var(--panel); text-decoration: none;
+  box-shadow: 0 16px 34px rgba(0,0,0,.5); }
+.mg-cov img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mg-cov.mg-side { aspect-ratio: 3/4; opacity: .42; transform: scale(.9);
+  filter: saturate(.65); }
+.mg-cov.mg-main { aspect-ratio: 3/4; box-shadow: 0 22px 50px rgba(0,0,0,.62); }
+.mg-cov.mg-main:hover img { transform: scale(1.03); transition: transform .35s; }
+
+/* ── tag pil: 1 baris, radius kecil, TANPA garis ── */
+.mg-tags { display: flex; flex-wrap: nowrap; gap: 7px; margin: 0 14px 15px;
+  overflow-x: auto; scrollbar-width: none; }
+.mg-tags::-webkit-scrollbar { display: none; }
+.mg-tag { flex: 0 0 auto; font-size: 11px; font-weight: 800; white-space: nowrap;
+  color: var(--cyan2); background: rgba(4,157,253,.13);
+  padding: 5px 11px; border-radius: 7px; }
+
+/* ── judul · penulis · sinopsis ── */
+.mg-meta { margin: 0 16px; text-align: center; }
+.mg-judul { font-size: 20px; font-weight: 800; line-height: 1.28;
+  letter-spacing: -.01em; margin-bottom: 9px; color: var(--putih); }
+.mg-penulis { font-size: 12px; color: var(--samar); margin-bottom: 12px; }
+.mg-penulis b { color: var(--cyan2); font-weight: 800; }
+.mg-desk { font-size: 12.5px; line-height: 1.6; color: rgba(242,247,252,.62);
+  margin: 0 auto; max-width: 330px;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  overflow: hidden; }
+.mg-more { display: inline-block; margin-top: 9px; color: var(--cyan);
+  font-weight: 800; font-size: 12px; text-decoration: none; }
+.mg-more:hover { text-decoration: underline; }
+
+/* ── navigasi Prev / Next ── */
+.mg-nav { display: flex; align-items: center; justify-content: center; gap: 13px;
+  margin: 20px 14px 0; padding-bottom: 20px; }
+.mg-nav button { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%;
+  border: 0; background: var(--panel2); color: var(--putih);
+  display: grid; place-items: center; cursor: pointer; transition: background .18s; }
+.mg-nav button:hover { background: var(--cyan); color: #04121d; }
+.mg-nav button svg { width: 15px; height: 15px; fill: none; stroke: currentColor;
+  stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.mg-tengah { text-align: center; font-size: 11.5px; line-height: 1.75;
+  color: var(--samar); min-width: 0; }
+.mg-tengah b { color: var(--putih); font-weight: 800; }
+.mg-tengah span { color: var(--cyan2); }
+
+@media (max-width: 600px) {
+  .mg-stage { grid-template-columns: 62px 1fr 62px; column-gap: 8px; }
+  .mg-judul { font-size: 18px; }
+  .mg-desk { font-size: 12px; }
+}

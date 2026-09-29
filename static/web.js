@@ -153,4 +153,90 @@
       mekar();
     }
   }
+
+  /* ══════════════════════════════════════════════════════════════
+     MINGGU INI — section sorotan (gaya "Opening Story")
+     Prev/Next BERFUNGSI: memutar indeks daftar novel, lalu mengganti
+     cover (tengah + 2 tetangga), tag, judul, penulis, sinopsis, dan
+     judul Sebelumnya/Berikutnya — tanpa memuat ulang halaman.
+     ⚠️ Data diambil dari atribut data-minggu (JSON) di _minggu.html,
+        BUKAN dari <script> inline (biar aman & tidak kena CSP).
+     ══════════════════════════════════════════════════════════════ */
+  var mgData = document.getElementById('mgData');
+  if (mgData) {
+    var mg = [];
+    try { mg = JSON.parse(mgData.getAttribute('data-minggu') || '[]'); } catch (e) { mg = []; }
+
+    var elKiri = document.getElementById('mgKiri');
+    var elUtama = document.getElementById('mgUtama');
+    var elKanan = document.getElementById('mgKanan');
+    var elTags = document.getElementById('mgTags');
+    var elJudul = document.getElementById('mgJudul');
+    var elPenulis = document.getElementById('mgPenulis');
+    var elDesk = document.getElementById('mgDesk');
+    var elMore = document.getElementById('mgMore');
+    var elPrevJ = document.getElementById('mgPrevJudul');
+    var elNextJ = document.getElementById('mgNextJudul');
+
+    var mgIdx = 0;
+    function mgAmbil(i) {            /* indeks melingkar (tidak pernah habis) */
+      var n = mg.length;
+      return mg[((i % n) + n) % n];
+    }
+
+    function mgGambar(el, elImg, n) {
+      if (!n) return;
+      var c = n.cover || '';
+      if (elImg.getAttribute('src') !== c) elImg.setAttribute('src', c);
+      elImg.setAttribute('alt', 'Cover ' + (n.judul || ''));
+      el.setAttribute('href', n.url || '#');
+    }
+
+    function mgTampil(i) {
+      if (!mg.length) return;
+      mgIdx = i;
+      var n = mgAmbil(i);
+      mgGambar(elKiri, document.getElementById('mgKiriImg'), mgAmbil(i - 1));
+      mgGambar(elUtama, document.getElementById('mgUtamaImg'), n);
+      mgGambar(elKanan, document.getElementById('mgKananImg'), mgAmbil(i + 1));
+
+      elJudul.textContent = n.judul || '';
+      elPenulis.textContent = n.penulis || '';
+      elDesk.textContent = n.desk || '';
+      elMore.setAttribute('href', n.url || '#');
+
+      elTags.innerHTML = '';
+      (n.tags || []).forEach(function (tg) {
+        var s = document.createElement('span');
+        s.className = 'mg-tag';
+        s.textContent = '#' + tg;
+        elTags.appendChild(s);
+      });
+
+      elPrevJ.textContent = mgAmbil(i - 1).judul || '—';
+      elNextJ.textContent = mgAmbil(i + 1).judul || '—';
+    }
+
+    ['mgPrev', 'mgNext'].forEach(function (id) {
+      var b = document.getElementById(id);
+      if (b) b.addEventListener('click', function () {
+        mgTampil(mgIdx + parseInt(b.getAttribute('data-dir'), 10));
+      });
+    });
+
+    /* geser (swipe) di area cover untuk HP */
+    var area = document.querySelector('.mg-stage');
+    if (area) {
+      var x0 = null;
+      area.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+      area.addEventListener('touchend', function (e) {
+        if (x0 === null) return;
+        var d = e.changedTouches[0].clientX - x0;
+        if (Math.abs(d) > 40) mgTampil(mgIdx + (d < 0 ? 1 : -1));
+        x0 = null;
+      }, { passive: true });
+    }
+
+    mgTampil(0);
+  }
 })();
