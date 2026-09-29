@@ -339,8 +339,8 @@ img { display: block; }
 .detail-alt { margin: 0 0 14px; font-size: 11px; font-weight: 700;
   color: rgba(255,255,255,.3); line-height: 1.5; }
 .detail-lencana { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
-.detail-lencana span { font-size: 9px; font-weight: 900; padding: 5px 11px;
-  border-radius: 4px; text-transform: uppercase; letter-spacing: .08em; }
+.detail-lencana span { font-size: 10px; font-weight: 800; padding: 5px 11px;
+  border-radius: 6px; text-transform: uppercase; letter-spacing: .08em; }
 .lc-tipe { background: var(--emas); color: #000; }
 .lc-status { background: rgba(255,255,255,.1); color: rgba(255,255,255,.8);
   border: 1px solid rgba(255,255,255,.06); }
@@ -349,13 +349,13 @@ img { display: block; }
 .lc-abu { background: rgba(255,255,255,.05); color: var(--redup);
   border: 1px solid rgba(255,255,255,.06); }
 .detail-kotak { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-.detail-kotak div { background: rgba(255,255,255,.05); padding: 8px 13px;
-  border-radius: 4px; border: 1px solid rgba(255,255,255,.06); }
+.detail-kotak div { background: rgba(255,255,255,.05); padding: 5px 11px;
+  border-radius: 6px; border: 1px solid rgba(255,255,255,.06); font-size: 10px; font-weight: 800}
 .detail-kotak small { display: block; font-size: 9px; font-weight: 900;
   text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.4); }
 .detail-kotak b { font-size: 12px; font-weight: 800; }
 .detail-genre { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-.detail-genre a { padding: 6px 13px; border-radius: 999px; font-size: 10.5px;
+.detail-genre a { padding: 5px 11px; border-radius: 6px; font-size: 10px;
   font-weight: 800; background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.1); color: var(--redup); transition: all .18s; }
 .detail-genre a:hover { background: var(--emas); color: #000; border-color: var(--emas); }
