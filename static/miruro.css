@@ -883,22 +883,35 @@ body.ada-kunci{
 }
 
 /* bilah atas nempel di atas isi yang buram */
-body.ada-kunci .baca-bilah{
-  position:fixed;
-  top:0; left:0; right:0;
+/* panel daftar bab di bawah tetap ada, tapi tidak bisa digapai saat terkunci */
+/* daftar bab & navigasi disembunyikan supaya tidak ada jalan pintas */
+@media (max-width:380px){
+  .baca.baca-terkunci .baca-isi{ max-height:calc(100vh - 310px); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   GERBANG BAB: yang tampil HANYA isi bab (buram) + kotak login.
+   Sisanya (Bab Lain, navigasi, ilustrasi) DISEMBUNYIKAN.
+   ══════════════════════════════════════════════════════════ */
+
+/* panel "Bab Lain" & navigasi bawah → tidak ditampilkan saat terkunci */
+.baca.baca-terkunci #daftar-bab,
+.baca.baca-terkunci .baca-navigasi{
+  display:none !important;
+}
+
+/* ilustrasi (pembuka & sisanya) juga disembunyikan — biar bersih */
+.baca.baca-terkunci .baca-illust{
+  display:none !important;
+}
+
+/* bilah atas tetap terlihat & nempel di atas */
+.baca.baca-terkunci .baca-bilah{
+  position:sticky;
+  top:0;
   z-index:58;
   background:rgba(18,21,26,.94);
   -webkit-backdrop-filter:blur(10px);
           backdrop-filter:blur(10px);
   border-bottom:1px solid rgba(160,200,240,.08);
-}
-
-/* panel daftar bab di bawah tetap ada, tapi tidak bisa digapai saat terkunci */
-body.ada-kunci #daftar-bab{ display:none; }
-
-/* daftar bab & navigasi disembunyikan supaya tidak ada jalan pintas */
-.baca.baca-terkunci .baca-navigasi{ visibility:hidden; }
-
-@media (max-width:380px){
-  .baca.baca-terkunci .baca-isi{ max-height:calc(100vh - 310px); }
 }
