@@ -206,11 +206,13 @@ def beranda(request: Request):
     # ── JELAJAHI ACAK: hitung posisi kipas DI SINI, jangan di Jinja ──
     # ⚠️ Jinja tidak bisa `dict()`/`append`/kurung kurawal → pelajaran 29 Sep.
     # Rumus user: offset = i-1.5 · translateY(|offset|*7) · rotate(offset*7)
-    #             + margin-left i*52 (dulu 60 → total 356px, tumpuk terlalu
-    #             ke kiri di HP 360px). 52 → total 104+4*52 = 312px, PAS.
+    # ⚠️ Posisi HORIZONTAL sekarang ditentukan CSS dari `--i` (tidak lagi
+    #    `margin-left` bertingkat) supaya kipas benar-benar di tengah &
+    #    kartunya ikut membesar di layar lebar (pelajaran 29 Sep).
     for j, k in enumerate(acak[:5]):
         d = j - 1.5
-        k["lr"] = j * 52
+        k["i"] = j
+        k["lr"] = j * 52          # masih dikirim, tapi tidak dipakai lagi
         k["sudut"] = round(d * 7, 1)
         k["geser"] = round(abs(d) * 7, 1)
         k["z"] = j

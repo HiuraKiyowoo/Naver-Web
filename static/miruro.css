@@ -97,8 +97,16 @@ img { display: block; }
    Kartu ditumpuk miring (rotate + translateY), sudut dari JS:
      transform: translateY(|i-1.5|*7px) rotate((i-1.5)*7deg)
    5 kartu: -2,-1,0,1,2 → rotasi -14°, -7°, 0°, +7°, +14° */
-.fan{position:relative;height:190px;margin:0 20px}
-.fi{position:absolute;bottom:0;width:104px;left:calc(50% - 160px);transform-origin:50% 100%}
+/* ── KIPAS "Jelajahi Acak" ──
+   ⚠️ PELAJARAN 29 Sep: ukuran px tetap bikin kipas (312px) lebih SEMPIT dari
+   container → gap kanan-kiri 19-39px, kelihatan "kartunya kurang gede".
+   Sekarang: kartu = lebar .fan / 3  ·  step = kartu / 2
+     → bentang = kartu + 4*step = kartu + 2*kartu = 3*kartu = LEBAR .fan ✔
+   Posisi dihitung dari TENGAH supaya selalu simetris. */
+.fan{position:relative;height:215px;margin:0 16px;
+  --k:calc((100% - 0px)/3); --s:calc(var(--k)/2)}
+.fi{position:absolute;bottom:0;width:var(--k);transform-origin:50% 100%;
+  left:calc((100% - var(--k))/2); margin-left:calc((var(--i) - 2) * var(--s))}
 .fi img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:8px;box-shadow:0 10px 24px rgba(20,25,60,.3)}
 
 /* ── animasi kipas: (1) MEKAR saat masuk layar · (3) TERANGKAT saat ditunjuk ──
@@ -499,7 +507,6 @@ img { display: block; }
   .rak2 .kartu-judul { font-size: 9.5px; }
   .rak2 .kartu-meta { font-size: 8px; }
   /* kipas acak: tetap 5 kartu miring, cuma dikecilkan */
-  .fan{height:165px;margin:0 12px}
-  .fi{width:88px;left:calc(50% - 138px)}
+  .fan{height:196px;margin:0 12px}
   .fi .bd{font-size:9px;padding:2px 6px;left:5px;top:5px}
 }
