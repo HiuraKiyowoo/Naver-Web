@@ -974,3 +974,10 @@ body.ada-kunci{
 .tombol-hati.sedang{ opacity:.6; pointer-events:none; }
 .tombol-hati.pop{ animation:hatiPop .34s ease; }
 @keyframes hatiPop{ 0%{transform:scale(1)} 45%{transform:scale(1.14)} 100%{transform:scale(1)} }
+
+/* ══ TANDA ✓ SUDAH DIBACA ══ */
+.bab-cek{ display:inline-block; margin-right:6px; font-size:11px; font-weight:700;
+  color:#0B1A24; background:#4FD1A5; border-radius:50%;
+  width:15px; height:15px; line-height:15px; text-align:center; vertical-align:middle; }
+.bab-item.bab-sudah .bab-judul{ color:#8CA0B4; }
+.bab-item.bab-sudah .bab-no{ color:#7E93A7; }

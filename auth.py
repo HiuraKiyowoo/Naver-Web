@@ -220,6 +220,24 @@ def jumlah_baca_tamu(tamu_id, novel_id):
     return r['n'] if r else 0
 
 
+def bab_sudah_dibaca_tamu(tamu_id, novel_id):
+    """kumpulan urutan bab yang sudah dibaca tamu ini pada satu novel (set)"""
+    b = _q('SELECT urutan FROM baca_tamu WHERE tamu_id=? AND novel_id=?',
+           (tamu_id, novel_id))
+    return {r['urutan'] for r in b}
+
+
+def novel_dibaca(pengguna_id):
+    """semua nomor urutan bab yang sudah dibaca pengguna, per novel:
+    {novel_id: {urutan, ...}} — dipakai untuk tanda ✓ di daftar bab"""
+    b = _q('SELECT novel_id, urutan FROM baca_pengguna WHERE pengguna_id=?',
+           (pengguna_id,))
+    hasil = {}
+    for r in b:
+        hasil.setdefault(r['novel_id'], set()).add(r['urutan'])
+    return hasil
+
+
 def boleh_baca_tanpa_login(tamu_id, novel_id, urutan):
     """True = masih boleh (≤3 bab & belum pernah baca bab itu).
     False = wajib login."""

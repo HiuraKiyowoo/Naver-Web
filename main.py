@@ -344,6 +344,8 @@ def novel(request: Request, slug: str):
         "pengguna": getattr(request.state, "pengguna", None),
         "favorit": (auth.favorit_ada(request.state.pengguna["id"], r["id"])
                     if getattr(request.state, "pengguna", None) else False),
+        "sudah": _sudah_dibaca(request, r["id"]),
+        "lanjut": _lanjut_baca(request, r["id"]),
     })
 
 
@@ -363,7 +365,16 @@ def bab(request: Request, slug: str, urutan: int):
     # (berdasarkan NOMOR BAB, bukan berapa kali dibaca)
     pengguna = getattr(request.state, "pengguna", None)
     if pengguna:
+        # pengguna login → catat (untuk tanda ✓ + tombol "Lanjut baca")
         auth.catat_baca(pengguna["id"], n["id"], urutan)
+    elif urutan <= auth.BATAS_TAMU:
+        # tamu (bab bebas) → catat juga, biar tanda ✓ tetap muncul
+        tamu = getattr(request.state, "tamu", None)
+        if tamu:
+            try:
+                auth.catat_baca_tamu(tamu, n["id"], urutan)
+            except Exception:
+                pass
     # bab di atas batas & belum login → halaman tetap tampil,
     # tapi isi di-blur + pop-up naik dari bawah (gerbang_dasar)
     gerbang_dasar = (not pengguna) and urutan > auth.BATAS_TAMU
@@ -400,6 +411,7 @@ def bab(request: Request, slug: str, urutan: int):
         "ada_teks": ada_teks,
         "gerbang_dasar": gerbang_dasar,
         "pengguna": pengguna,
+        "sudah": _sudah_dibaca(request, n["id"]),
         "bab_awal": [dict(x) for x in ambil(
             "SELECT urutan, judul FROM bab WHERE novel_id=? ORDER BY urutan LIMIT ?",
             (n["id"], auth.BATAS_TAMU))] if gerbang_dasar else [],
@@ -795,6 +807,38 @@ def apk(request: Request):
 #  BANTUAN: ambil detail novel dari sebuah daftar id (untuk
 #  halaman Pustaka: favorit & riwayat baca)
 # ══════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
+#  BANTUAN: bab yang sudah dibaca + posisi lanjut baca
+#     pengguna login → dB users.db (baca_pengguna)
+#     tamu           → dB users.db (baca_tamu, cookie bertanda-tangan)
+# ══════════════════════════════════════════════════════════════
+def _sudah_dibaca(request, novel_id):
+    """kumpulan nomor urutan bab yang sudah dibaca (set)"""
+    try:
+        pengguna = getattr(request.state, "pengguna", None)
+        if pengguna:
+            return auth.novel_dibaca(pengguna["id"]).get(novel_id, set())
+        tamu = getattr(request.state, "tamu", None)
+        if tamu:
+            return auth.bab_sudah_dibaca_tamu(tamu, novel_id)
+    except Exception:
+        pass
+    return set()
+
+
+def _lanjut_baca(request, novel_id):
+    """urutan bab terakhir yang dibaca (untuk tombol 'Lanjut baca')"""
+    try:
+        pengguna = getattr(request.state, "pengguna", None)
+        if pengguna:
+            for r in auth.riwayat(pengguna["id"], batas=200):
+                if r["novel_id"] == novel_id:
+                    return r["urutan"]
+    except Exception:
+        pass
+    return None
+
+
 def _novel_dari_id(ids):
     """ids: daftar id novel (urutannya dipertahankan)"""
     if not ids:
