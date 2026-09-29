@@ -140,19 +140,9 @@ def beranda(request: Request):
     #  tipe light 149 / web 320 · status complete 207 / ongoing 289.
     # ═══════════════════════════════════════════════════════════════════
     # PALING PANJANG — DIHAPUS atas permintaan user 29 Sep ("gajelas").
-    # BERILUSTRASI — DIHAPUS juga atas permintaan user. Diganti:
-    # DARI JEPANG (250 novel) & DARI KOREA (138) — asal negara nyata dari dB.
-    jepang = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND LOWER(COALESCE(country,'')) LIKE '%jepang%' "
-        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
-    korea = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND LOWER(COALESCE(country,'')) LIKE '%korea%' "
-        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
-    # WEB NOVEL / LIGHT NOVEL — tipe nyata dari dB (web 320 · light 149).
-    # ⚠️ JANGAN hapus lagi: user menegur 29 Sep ("Web Novel sama Light Novel
-    #    malah di ganti") — yang diminta buang HANYA Paling Panjang & Bergambar.
+    # BERILUSTRASI — DIHAPUS juga atas permintaan user.
+    # DARI JEPANG / DARI KOREA — DIHAPUS atas permintaan user 29 Sep ("hapus aja").
+    # WEB NOVEL / LIGHT NOVEL — tipe nyata dari dB (web 320 · light 149). DIPERTAHANKAN.
     light = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
         "AND LOWER(COALESCE(tipe,'')) LIKE '%light%' "
@@ -221,7 +211,6 @@ def beranda(request: Request):
         "hero": hero, "acak": acak, "baru": baru,
         "update": update, "tamat": tamat, "ongoing": ongoing,
         "genre": genre, "tag": tag, "premium": premium,
-        "jepang": jepang, "korea": korea,
         "light": light, "webnovel": webnovel,
     })
 
