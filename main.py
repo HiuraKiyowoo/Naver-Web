@@ -34,6 +34,17 @@ ROOT = BASE.parent
 DB = ROOT / "naver.db"
 
 app = FastAPI(title="Naver Web", docs_url=None, redoc_url=None)
+# ⚠️ BERKAS GAMBAR (cover & ilustrasi) DISAJIKAN LANGSUNG dari disk.
+#    Dulu web TIDAK punya route /cover/* → beranda minta /cover/1987.webp
+#    ke port 8100 → 404 → browser menampilkan ikon "kertas rusak" di
+#    SEMUA kartu. Route ini yang memperbaikinya (tanpa lewat API 8000,
+#    jadi lebih cepat & tidak ikut batas laju API).
+GAMBAR = ROOT / "gambar"
+COVER = ROOT / "cover"
+if GAMBAR.exists():
+    app.mount("/gambar", StaticFiles(directory=str(GAMBAR)), name="gambar")
+if COVER.exists():
+    app.mount("/cover", StaticFiles(directory=str(COVER)), name="cover")
 app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
 tpl = Jinja2Templates(directory=str(BASE / "templates"))
 
