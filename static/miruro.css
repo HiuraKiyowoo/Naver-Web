@@ -264,13 +264,18 @@ img { display: block; }
 .grid .kartu-judul { font-size: 11px; }
 
 /* ── pil filter ── */
-.pil-baris { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 8px; }
-.chip { display: inline-flex; align-items: center; gap: 6px; height: 33px; padding: 0 14px;
-  border-radius: 999px; font-size: 12px; font-weight: 800; color: var(--redup);
-  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
-  transition: all .18s; }
+/* ── baris PIL (Genre & Tag) ──
+   ⚠️ permintaan user 29 Sep: radius KECIL (bukan 999px), TANPA garis,
+   dan cuma 1 BARIS (sisanya digeser ke samping). */
+.pil-baris { display: flex; flex-wrap: nowrap; gap: 7px; padding: 2px 8px 6px;
+  overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.pil-baris::-webkit-scrollbar { display: none; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px;
+  border-radius: 8px; font-size: 11.5px; font-weight: 800; color: var(--redup);
+  background: rgba(255,255,255,.06); border: 0; white-space: nowrap;
+  flex: 0 0 auto; transition: all .18s; }
 .chip b { color: var(--samar); font-size: 10px; }
-.chip:hover, .chip.aktif { background: var(--emas); color: #000; border-color: var(--emas); }
+.chip:hover, .chip.aktif { background: var(--cyan); color: #04121d; }
 .chip:hover b, .chip.aktif b { color: rgba(0,0,0,.6); }
 
 /* ── filter baris (jelajah) ── */
