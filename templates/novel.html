@@ -85,16 +85,5 @@
   <div class="kosong"><b>Belum ada bab</b><span>Bab akan muncul setelah ditambahkan.</span></div>
   {% endif %}
 
-  {# ── serupa ── #}
-  {% if serupa %}
-  <section class="bagian">
-    <div class="bagian-kepala">
-      <div class="bagian-kiri"><h2>Mungkin Kamu Suka</h2><span class="bagian-sub">Genre serupa</span></div>
-    </div>
-    <div class="grid">
-      {% for s in serupa %}{% set n = s %}{% include "_kartu.html" %}{% endfor %}
-    </div>
-  </section>
-  {% endif %}
 </div>
 {% endblock %}

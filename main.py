@@ -369,10 +369,14 @@ def bab(request: Request, slug: str, urutan: int):
         "SELECT urutan, file_lokal, url_asli, caption FROM bab_gambar WHERE bab_id=? ORDER BY urutan",
         (b["id"],))]
     for g in gmb:
-        # gambar lokal → lewat API kita (di-cache CF 7 hari)
-        # belum diunduh  → pakai URL asli langsung (biar tetap tampil)
-        g["sumber"] = (f"/api/gambar/{b['id']}/{g['urutan']}"
-                       if g["file_lokal"] else g["url_asli"])
+        # gambar lokal  → /gambar/<bab_id>/<urutan><ekstensi asli>
+        #   ⚠️ ekstensi bisa .png / .jpg / .jpeg / .webp — ambil dari file_lokal!
+        # belum diunduh → pakai URL asli langsung (biar tetap tampil)
+        if g["file_lokal"]:
+            ext = os.path.splitext(g["file_lokal"])[1] or ".jpg"
+            g["sumber"] = f"/gambar/{b['id']}/{g['urutan']}{ext}"
+        else:
+            g["sumber"] = g["url_asli"]
     sebelum = ambil("SELECT MAX(urutan) u FROM bab WHERE novel_id=? AND urutan<?",
                     (n["id"], urutan), satu=True)["u"]
     sesudah = ambil("SELECT MIN(urutan) u FROM bab WHERE novel_id=? AND urutan>?",
