@@ -11,6 +11,14 @@
     </div>
   </div>
 
+  {# ── kotak cari (sama seperti di Jelajah) ── #}
+  <form class="cari-besar" action="/cari" method="get" role="search">
+    <span class="ikon" aria-hidden="true">⌕</span>
+    <input type="search" name="q" placeholder="Cari novel, penulis, atau isi bab"
+           value="{{ q|default('') }}" aria-label="Cari novel" autocomplete="off">
+    <button type="submit">Cari</button>
+  </form>
+
   {% if not q %}
   <div class="kosong">
     <b>Mulai mencari</b>

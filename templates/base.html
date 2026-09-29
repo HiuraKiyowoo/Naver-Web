@@ -23,14 +23,9 @@
 <header class="kepala">
   <div class="kepala-dalam">
     <a class="logo" href="/">{{ nama }}</a>
-    <form class="cari-atas" action="/cari" method="get" role="search">
-      <span class="cari-ikon" aria-hidden="true">⌕</span>
-      <input type="search" name="q" placeholder="Cari novel, penulis, atau bab"
-             value="{{ q|default('') }}" aria-label="Cari" autocomplete="off">
-    </form>
     <nav class="nav-atas">
       <a href="/jelajah">Jelajah</a>
-      <a class="tombol-apk" href="/apk">APK</a>
+      <a href="/pustaka">Pustaka</a>
     </nav>
   </div>
 </header>
@@ -45,9 +40,10 @@
     </div>
     <div class="kaki-tautan">
       <a href="/jelajah">Jelajah</a>
+      <a href="/cari">Cari</a>
       <a href="/jelajah?order=rating">Rating</a>
       <a href="/jelajah?order=baru">Terbaru</a>
-      <a href="/apk">Unduh APK</a>
+      <a href="/pustaka">Pustaka</a>
       <a href="/sitemap.xml">Sitemap</a>
       <a href="/status">Status</a>
     </div>
