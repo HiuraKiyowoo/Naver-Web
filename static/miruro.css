@@ -32,7 +32,7 @@ html { background: var(--bg); }
    → semua section kelihatan "geser" + gap kanan.
    ⚠️ JANGAN taruh overflow-x:hidden di <html> → SCROLL VERTIKAL HP MACET!
    Cukup di <body> (aman & tetap mematikan geser horizontal). */
-body { overflow-x: hidden; }
+body { overflow-x: clip; }
 body {
   margin: 0; background: var(--bg) !important; color: var(--putih);
   font-family: 'Quicksand', 'Noto Sans', system-ui, -apple-system, sans-serif;
@@ -46,7 +46,7 @@ img { display: block; }
 .redup { color: var(--samar); }
 
 /* ── kepala (nempel di atas, TIDAK melayang) ── */
-.kepala { position: static; top: auto; left: auto; right: auto; z-index: auto;
+.kepala { position: sticky; top: 0; z-index: 100;
   padding: 0; background: #12151A; border-bottom: 1px solid var(--garis); }
 .kepala-dalam {
   max-width: 1280px; margin: 0 auto; height: 58px;
@@ -165,7 +165,7 @@ img { display: block; }
 .cari-besar button:hover { background: var(--cyan2); }
 
 /* ── hero carousel 16:9 (paling khas Miruro) ── */
-.hero { padding-top: 18px; }
+.hero { padding-top: 10px; }
 .hero-track {
   display: flex; gap: 0; overflow-x: auto; padding: 8px 6%;
   scroll-snap-type: x mandatory; scrollbar-width: none;
@@ -315,7 +315,7 @@ img { display: block; }
   filter: blur(60px); opacity: .12; transform: scale(1.1); }
 .detail-latar::after { content: ''; position: absolute; inset: 0;
   background: rgba(10,10,12,.82); }
-.detail { position: relative; z-index: 1; padding-top: 24px; max-width: 900px;
+.detail { position: relative; z-index: 1; padding-top: 22px; max-width: 900px;
   margin: 0 auto; }
 .detail-atas { display: flex; gap: 26px; margin-bottom: 30px; }
 .detail-cover { width: 190px; flex: 0 0 auto; aspect-ratio: 2/3; object-fit: cover;
@@ -512,7 +512,7 @@ img { display: block; }
   .judul-hal h1 { font-size: 19px; }
   .bagian-kepala h2 { font-size: 15px; }
   body { padding-bottom: 100px; }
-  .detail { padding-top: 18px; }
+  .detail { padding-top: 14px; }
   .baca { padding: 80px 18px 130px; }
   .baca h1 { font-size: 19px; }
   .baca-isi { font-size: 15px; line-height: 1.9; }
