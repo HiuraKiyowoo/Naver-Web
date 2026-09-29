@@ -56,7 +56,7 @@
       {% endif %}
     <a href="/request"{% if halaman == 'request' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">✦</span> Request</a>
   </nav>
-  <div class="laci-kaki">Arsip pribadi · {{ total_novel|default('') }} novel</div>
+  <div class="laci-kaki">Arsip pribadi novel terjemahan</div>
 </aside>
 
 
@@ -64,23 +64,41 @@
 
 <footer class="kaki">
   <div class="wadah kaki-dalam">
-    <div>
+
+    {# ── kolom 1: logo + keterangan ── #}
+    <div class="kaki-merek">
       <b class="logo-gambar kaki-logo">
         <img src="/static/img/logo-putih-320.png" alt="{{ nama }}" width="320" height="197" class="logo-img">
       </b>
-      <span class="redup">Arsip pribadi novel terjemahan · {{ total_novel|default('') }} novel · {{ total_bab|default('') }} bab. Semua bab disimpan di server sendiri.</span>
+      <span class="redup">Arsip pribadi novel terjemahan.<br>Semua bab disimpan di server sendiri.</span>
     </div>
-    <div class="kaki-tautan">
+
+    {# ── kolom 2 & 3: tautan dikelompokkan biar rapi ── #}
+    <nav class="kaki-grup" aria-label="Jelajahi">
+      <b class="kaki-judul">Jelajahi</b>
       <a href="/jelajah">Jelajah</a>
       <a href="/cari">Cari</a>
       <a href="/jelajah?order=rating">Rating</a>
       <a href="/jelajah?order=baru">Terbaru</a>
+    </nav>
+
+    <nav class="kaki-grup" aria-label="Lainnya">
+      <b class="kaki-judul">Lainnya</b>
       <a href="/pustaka">Pustaka</a>
-      <a href="/sitemap.xml">Sitemap</a>
       <a href="/status">Status</a>
+      <a href="/sitemap.xml">Sitemap</a>
+      {% if not pengguna %}<a href="/masuk">Masuk</a>{% endif %}
+    </nav>
+
+  </div>
+
+  <div class="kaki-bawah">
+    <div class="wadah kaki-bawah-dalam">
+      <span>© {{ nama }}</span>
+      <span class="kaki-pisah" aria-hidden="true">·</span>
+      <span>Dibuat untuk membaca pribadi</span>
     </div>
   </div>
-  <div class="kaki-bawah">© {{ nama }} · {{ total_novel|default('') }} novel · {{ total_bab|default('') }} bab</div>
 </footer>
 
 </body>

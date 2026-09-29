@@ -1117,3 +1117,37 @@ a.hal-angka-item:hover{ background:rgba(4,157,253,.16); color:#DFF0FF; }
   .panel-kartu b{font-size:17px}
   .panel-tbl th,.panel-tbl td{padding:9px 10px;font-size:12px}
 }
+
+/* ═══════════ FOOTER (tata ulang 29 Sep) ═══════════ */
+.kaki-dalam{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(2,minmax(0,1fr));
+  gap:34px 40px;align-items:start}
+.kaki-merek{display:flex;flex-direction:column;gap:10px;min-width:0}
+.kaki-merek .redup{max-width:34ch}
+.kaki-grup{display:flex;flex-direction:column;gap:9px;min-width:0}
+.kaki-judul{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--emas);margin-bottom:3px}
+.kaki-grup a{font-size:13px;font-weight:600;color:var(--samar);text-decoration:none;
+  line-height:1.5;transition:color .15s ease}
+.kaki-grup a:hover{color:var(--emas)}
+.kaki-bawah-dalam{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:600;color:var(--samar);text-align:center}
+.kaki-pisah{opacity:.45}
+@media(max-width:760px){
+  .kaki-dalam{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 24px}
+  .kaki-merek{grid-column:1 / -1}
+  .kaki-merek .redup{max-width:none}
+  .kaki .redup{font-size:11.5px}
+}
+@media(max-width:420px){
+  .kaki-dalam{grid-template-columns:1fr;gap:24px}
+  .kaki-grup{flex-direction:row;flex-wrap:wrap;gap:10px 16px;align-items:baseline}
+  .kaki-judul{flex-basis:100%;margin-bottom:0}
+}
+
+/* ═══ GENRE "+N lagi" (29 Sep) ═══ */
+.genre-sisa{display:contents}
+.genre-lagi{padding:5px 11px;border-radius:6px;font-size:10px;font-weight:800;cursor:pointer;
+  color:var(--emas);background:transparent;border:1px solid var(--garis);font-family:inherit;
+  transition:background .15s ease,color .15s ease,border-color .15s ease;white-space:nowrap}
+.genre-lagi:hover{background:var(--emas);color:#000;border-color:var(--emas)}
+.detail-tag{margin-top:-8px}

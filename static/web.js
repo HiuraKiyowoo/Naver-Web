@@ -459,3 +459,23 @@ function bacaBalasan(r) {
 
   f.addEventListener('submit', function(e){ e.preventDefault(); kirim(); });
 })();
+
+/* ═══ GENRE/TAG: tombol "+N lagi" (halaman detail) ═══ */
+(function () {
+  'use strict';
+  ['genre', 'tag'].forEach(function (nama) {
+    var tombol = document.getElementById(nama + 'Lagi');
+    var sisa = document.getElementById(nama + 'Sisa');
+    if (!tombol || !sisa) return;
+
+    var jumlah = (tombol.textContent.match(/\d+/) || ['0'])[0];
+    var buka = false;
+
+    tombol.addEventListener('click', function () {
+      buka = !buka;
+      sisa.hidden = !buka;
+      tombol.setAttribute('aria-expanded', buka ? 'true' : 'false');
+      tombol.textContent = buka ? '− Sembunyikan' : '+' + jumlah + ' lagi';
+    });
+  });
+})();

@@ -43,10 +43,38 @@
       </div>
 
       {% if genre or tag %}
-      <div class="detail-genre">
-        {% for g in genre %}<a href="/genre/{{ g.slug }}">{{ g.nama }}</a>{% endfor %}
-        {% for t in tag %}<a href="/tag/{{ t.slug }}">#{{ t.nama }}</a>{% endfor %}
+      {# ── GENRE: maksimal 3 tampil, sisanya disembunyikan di balik "+N lagi" ── #}
+      <div class="detail-genre" id="detailGenre">
+        {% for g in genre[:3] %}
+          <a href="/genre/{{ g.slug }}">{{ g.nama }}</a>
+        {% endfor %}
+
+        {% if genre|length > 3 %}
+          <span class="genre-sisa" id="genreSisa" hidden>
+            {% for g in genre[3:] %}<a href="/genre/{{ g.slug }}">{{ g.nama }}</a>{% endfor %}
+          </span>
+          <button type="button" class="genre-lagi" id="genreLagi"
+                  aria-expanded="false" aria-controls="genreSisa">
+            +{{ genre|length - 3 }} lagi
+          </button>
+        {% endif %}
       </div>
+
+      {# ── TAG: pola sama, maksimal 6 (tag biasanya lebih banyak) ── #}
+      {% if tag %}
+      <div class="detail-genre detail-tag" id="detailTag">
+        {% for t in tag[:6] %}<a href="/tag/{{ t.slug }}">#{{ t.nama }}</a>{% endfor %}
+        {% if tag|length > 6 %}
+          <span class="genre-sisa" id="tagSisa" hidden>
+            {% for t in tag[6:] %}<a href="/tag/{{ t.slug }}">#{{ t.nama }}</a>{% endfor %}
+          </span>
+          <button type="button" class="genre-lagi" id="tagLagi"
+                  aria-expanded="false" aria-controls="tagSisa">
+            +{{ tag|length - 6 }} lagi
+          </button>
+        {% endif %}
+      </div>
+      {% endif %}
       {% endif %}
 
       {% if n.sinopsis %}
