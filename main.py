@@ -83,6 +83,22 @@ def _versi_aset() -> str:
 
 tpl.env.globals["versi_aset"] = _versi_aset
 
+
+def tipe_lencana(n) -> str:
+    """'LN' / 'WN' / '' — lencana tipe untuk kartu kipas (section Jelajahi Acak).
+
+    Dipakai di _kipas.html. Ambil dari field `tipe` milik dB (web 320 · light 149).
+    """
+    t = (n.get("tipe") or "").lower() if isinstance(n, dict) else ""
+    if "light" in t:
+        return "LN"
+    if "web" in t:
+        return "WN"
+    return ""
+
+
+tpl.env.globals["tipe_lencana"] = tipe_lencana
+
 # ── konfigurasi situs (dipakai di <head> utk SEO) ──
 SITUS = os.environ.get("NAVER_SITUS", "https://navernovel.my.id")
 NAMA = "Naver Novel"
@@ -186,6 +202,16 @@ def beranda(request: Request):
         update.append(k)
         if len(update) >= 16:
             break
+
+    # ── JELAJAHI ACAK: hitung posisi kipas DI SINI, jangan di Jinja ──
+    # ⚠️ Jinja tidak bisa `dict()`/`append`/kurung kurawal → pelajaran 29 Sep.
+    jml = len(acak[:5])
+    tgh = (jml - 1) / 2
+    for j, k in enumerate(acak):
+        d = j - tgh
+        k["sudut"] = round(d * 7, 1)
+        k["geser"] = round(abs(d) * 7, 1)
+        k["z"] = round(10 - d, 1)
     # TAMAT: status Completed (207 novel — judul jujur).
     tamat = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
