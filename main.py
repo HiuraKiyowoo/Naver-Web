@@ -362,20 +362,9 @@ def bab(request: Request, slug: str, urutan: int):
     pengguna = getattr(request.state, "pengguna", None)
     if pengguna:
         auth.catat_baca(pengguna["id"], n["id"], urutan)
-    elif urutan > auth.BATAS_TAMU:
-        # bab di atas batas & belum login → tampilkan halaman gerbang
-        semua_awal = [dict(x) for x in ambil(
-            "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan LIMIT ?",
-            (n["id"], auth.BATAS_TAMU))]
-        return tpl.TemplateResponse(request, "gerbang.html", {
-            "situs": SITUS, "halaman": "bab", "batas_bab": auth.BATAS_TAMU, "nama": NAMA,
-            "judul": "Wajib Masuk: " + n["judul"] + " | " + NAMA,
-            "desk": "Bab 1-" + str(auth.BATAS_TAMU) + " bebas dibaca. Masuk untuk lanjut.",
-            "kanon": SITUS + "/novel/" + slug + "/bab/" + str(urutan),
-            "n": dict(n), "slug": slug, "urutan": urutan,
-            "batas": auth.BATAS_TAMU, "bab_awal": semua_awal,
-            "pengguna": None,
-        })
+    # bab di atas batas & belum login → halaman tetap tampil,
+    # tapi isi di-blur + pop-up naik dari bawah (gerbang_dasar)
+    gerbang_dasar = (not pengguna) and urutan > auth.BATAS_TAMU
     gmb = [dict(x) for x in ambil(
         "SELECT urutan, file_lokal, url_asli, caption FROM bab_gambar WHERE bab_id=? ORDER BY urutan",
         (b["id"],))]
@@ -403,6 +392,11 @@ def bab(request: Request, slug: str, urutan: int):
         "n": dict(n), "b": dict(b), "paragraf": teks, "gambar": gmb,
         "sebelum": sebelum, "sesudah": sesudah, "semua_bab": semua_bab,
         "ada_teks": ada_teks,
+        "gerbang_dasar": gerbang_dasar,
+        "pengguna": pengguna,
+        "bab_awal": [dict(x) for x in ambil(
+            "SELECT urutan, judul FROM bab WHERE novel_id=? ORDER BY urutan LIMIT ?",
+            (n["id"], auth.BATAS_TAMU))] if gerbang_dasar else [],
     })
 
 

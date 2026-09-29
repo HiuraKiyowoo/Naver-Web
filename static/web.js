@@ -321,3 +321,38 @@
     });
   })();
 })();
+
+
+/* ══════════════════════════════════════════════════════════
+   POP-UP GERBANG: naik dari bawah + tirai blur
+   (bab di atas batas, pengunjung belum login)
+   ══════════════════════════════════════════════════════════ */
+(function(){
+  var pop = document.getElementById('popupGerbang');
+  if (!pop) return;
+  var tir = document.getElementById('tiraiBlur');
+  var tut = document.getElementById('pgTutup');
+  var kunciScroll = false;
+
+  function buka(){
+    requestAnimationFrame(function(){
+      if (tir) tir.classList.add('tampil');
+      pop.classList.add('tampil');
+    });
+    // fokus ke tombol masuk biar bisa langsung Enter (aksesibilitas)
+    var m = pop.querySelector('.pg-aksi .tombol-utama');
+    if (m) setTimeout(function(){ try { m.focus({preventScroll:true}); } catch(e){} }, 430);
+  }
+  function tutup(){
+    pop.classList.remove('tampil');
+    if (tir) tir.classList.remove('tampil');
+  }
+
+  buka();
+  if (tut) tut.addEventListener('click', tutup);
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') tutup();
+  });
+  // tap tirai = tutup
+  if (tir) tir.addEventListener('click', tutup);
+})();

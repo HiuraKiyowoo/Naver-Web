@@ -774,3 +774,99 @@ body.laci-ada { overflow: hidden; }
 .baca-navigasi a.nav-terkunci{ display:inline-flex; align-items:center; gap:7px;
   background:rgba(4,157,253,.14); color:#38BDF8; border:1px solid rgba(4,157,253,.30); }
 .baca-navigasi a.nav-terkunci:hover{ background:rgba(4,157,253,.24); }
+
+/* ══════════════════════════════════════════════════════════
+   GERBANG POP-UP BAWAH + ISI BAB DI-BLUR
+   (bab di atas batas & belum login)
+   ══════════════════════════════════════════════════════════ */
+
+/* isi bab disamarkan: tetap terlihat bentuknya, tapi tidak terbaca */
+.baca.baca-terkunci .baca-isi{
+  filter: blur(7px) saturate(.75);
+  opacity:.5;
+  max-height:46vh;
+  overflow:hidden;
+  -webkit-mask-image:linear-gradient(180deg,#000 40%,rgba(0,0,0,.25) 78%,transparent 100%);
+          mask-image:linear-gradient(180deg,#000 40%,rgba(0,0,0,.25) 78%,transparent 100%);
+  pointer-events:none;
+  user-select:none;
+}
+.baca.baca-terkunci .baca-isi p{ user-select:none; }
+.baca.baca-terkunci h1,
+.baca.baca-terkunci .baca-meta{ opacity:.75; }
+/* jangan biarkan bisa ditekan/di-scroll jadi terbaca */
+.baca.baca-terkunci figcaption{ opacity:.4; }
+
+/* tirai gelap + blur di belakang pop-up */
+.tirai-blur{
+  position:fixed; inset:0; z-index:58;
+  background:linear-gradient(180deg,rgba(7,16,24,.55) 0%,rgba(7,16,24,.86) 62%,rgba(7,16,24,.96) 100%);
+  -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  opacity:0; transition:opacity .34s ease;
+}
+.tirai-blur.tampil{ opacity:1; }
+
+/* pop-up naik dari bawah */
+.popup-naik{
+  position:fixed; left:0; right:0; bottom:0; z-index:59;
+  background:linear-gradient(180deg,#1A1F26 0%,#12151A 100%);
+  border-top:1px solid rgba(4,157,253,.34);
+  border-radius:18px 18px 0 0;
+  box-shadow:0 -18px 48px rgba(0,0,0,.62), 0 -1px 0 rgba(255,255,255,.04) inset;
+  padding:10px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  transform:translateY(104%);
+  transition:transform .42s cubic-bezier(.22,.9,.28,1);
+  max-width:660px; margin:0 auto;
+  will-change:transform;
+}
+.popup-naik.tampil{ transform:translateY(0); }
+
+.pg-gagang{ width:42px; height:4px; border-radius:999px;
+  background:rgba(255,255,255,.22); margin:0 auto 12px; }
+
+.pg-kepala{ display:flex; gap:12px; align-items:flex-start; }
+.pg-gembok{ display:inline-flex; align-items:center; justify-content:center;
+  width:38px; height:38px; border-radius:11px; flex:0 0 auto;
+  background:rgba(4,157,253,.14); color:#38BDF8;
+  border:1px solid rgba(4,157,253,.30); }
+.pg-gembok .ikon-gembok{ width:19px; height:19px; }
+.pg-kepala h3{ margin:0 0 4px; font-size:15px; font-weight:700; color:#F2F7FC; }
+.pg-kepala p{ margin:0; font-size:12.5px; line-height:1.55; color:#A8BBCE; }
+.pg-kepala p b{ color:#38BDF8; }
+
+.pg-isi{ margin-top:14px; }
+.pg-baris{ display:flex; flex-direction:column; gap:2px;
+  padding:11px 13px; border-radius:10px;
+  background:rgba(255,255,255,.045); border:1px solid rgba(160,200,240,.10); }
+.pg-baris b{ font-size:13px; color:#F2F7FC; font-weight:600; }
+.pg-baris span{ font-size:11px; color:#8FA3B8; }
+
+.pg-aksi{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:12px; }
+.pg-aksi .tombol{ margin:0; }
+
+.pg-petunjuk{ margin-top:13px; }
+.pg-petunjuk > span{ display:block; font-size:11px; color:#8FA3B8; margin-bottom:7px; }
+.pg-pil{ display:flex; gap:7px; flex-wrap:wrap; }
+.pg-pil a{ font-size:11.5px; padding:6px 11px; border-radius:8px;
+  background:rgba(255,255,255,.06); color:#CFE2F3; text-decoration:none;
+  border:1px solid rgba(160,200,240,.10); }
+.pg-pil a:hover{ background:rgba(4,157,253,.20); color:#fff; }
+
+.pg-tutup{ display:block; width:100%; margin-top:13px; padding:10px;
+  background:none; border:0; color:#7E93A8; font-size:12px; cursor:pointer;
+  font-family:inherit; }
+.pg-tutup:hover{ color:#A8BBCE; }
+
+/* HP kecil */
+@media (max-width:380px){
+  .popup-naik{ padding:9px 14px calc(15px + env(safe-area-inset-bottom, 0px)); }
+  .pg-kepala h3{ font-size:14px; }
+  .pg-kepala p{ font-size:11.5px; }
+  .pg-aksi{ gap:7px; }
+}
+
+/* hormati pengguna yang minta animasi minim */
+@media (prefers-reduced-motion: reduce){
+  .popup-naik{ transition:none; }
+  .tirai-blur{ transition:none; }
+}

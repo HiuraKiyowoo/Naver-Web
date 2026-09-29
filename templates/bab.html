@@ -1,5 +1,50 @@
 {% extends "base.html" %}
-{% block judul %}{{ judul }}{% endblock %}
+{% block judul %}{{ judul }}
+{# ══ POP-UP GERBANG (naik dari bawah) — bab di atas batas, belum login ══ #}
+{% if gerbang_dasar %}
+<div class="tirai-blur" id="tiraiBlur" aria-hidden="true"></div>
+
+<div class="popup-naik" id="popupGerbang" role="dialog" aria-modal="true"
+     aria-labelledby="pgJudul" aria-describedby="pgDesk">
+  <div class="pg-gagang" aria-hidden="true"></div>
+
+  <div class="pg-kepala">
+    <span class="pg-gembok" aria-hidden="true">{% include "_gembok.html" %}</span>
+    <div>
+      <h3 id="pgJudul">Lanjut baca perlu akun</h3>
+      <p id="pgDesk">
+        Di tiap novel, <b>bab 1–{{ batas_bab }} bebas</b> — mau dibaca berapa kali pun.
+        <b>Bab {{ batas_bab + 1 }}</b> ke atas perlu masuk.
+      </p>
+    </div>
+  </div>
+
+  <div class="pg-isi">
+    <div class="pg-baris"><b>{{ n.judul|truncate(46, true, '…') }}</b>
+      <span>Bab {{ b.nomor or b.urutan }} sedang dikunci</span></div>
+
+    <div class="pg-aksi">
+      <a class="tombol tombol-utama pg-lebar" href="/masuk?lanjut={{ (kanon | urlencode) }}">
+        Masuk / Daftar</a>
+      <a class="tombol tombol-abu pg-lebar" href="/novel/{{ n.slug }}">Kembali ke detail</a>
+    </div>
+
+    {% if bab_awal %}
+    <div class="pg-petunjuk">
+      <span>Masih bebas dibaca:</span>
+      <div class="pg-pil">
+        {% for x in bab_awal %}<a href="/novel/{{ n.slug }}/bab/{{ x.urutan }}">Bab {{ x.urutan }}</a>{% endfor %}
+        <a href="/novel/{{ n.slug }}">Semua bab</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <button type="button" class="pg-tutup" id="pgTutup">Nanti saja</button>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
 
 {% block isi %}
 
@@ -15,7 +60,7 @@
   </div>
 </div>
 
-<div class="baca">
+<div class="baca{% if gerbang_dasar %} baca-terkunci{% endif %}">
 
   <h1>{{ b.judul or ('Bab ' ~ (b.nomor or b.urutan)) }}</h1>
   <div class="baca-meta">
