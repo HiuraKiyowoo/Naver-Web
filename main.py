@@ -356,26 +356,25 @@ def bab(request: Request, slug: str, urutan: int):
     if not b:
         raise HTTPException(404)
 
-    # ── GERBANG 3 BAB (dihitung PER NOVEL, bukan total) ──
+    # ── GERBANG: bab 1..3 BEBAS SELAMANYA · bab 4+ WAJIB LOGIN ──
+    # (berdasarkan NOMOR BAB, bukan berapa kali dibaca)
     pengguna = getattr(request.state, "pengguna", None)
-    tamu = getattr(request.state, "tamu", None)
     if pengguna:
         auth.catat_baca(pengguna["id"], n["id"], urutan)
-    else:
-        if not auth.boleh_baca_tanpa_login(tamu, n["id"], urutan):
-            semua_awal = [dict(x) for x in ambil(
-                "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan LIMIT 3",
-                (n["id"],))]
-            return tpl.TemplateResponse(request, "gerbang.html", {
-                "situs": SITUS, "halaman": "bab", "nama": NAMA,
-                "judul": "Wajib Masuk: " + n["judul"] + " | " + NAMA,
-                "desk": "Bab 1-3 gratis. Masuk untuk lanjut membaca.",
-                "kanon": SITUS + "/novel/" + slug + "/bab/" + str(urutan),
-                "n": dict(n), "slug": slug, "urutan": urutan,
-                "batas": auth.BATAS_TAMU, "bab_awal": semua_awal,
-                "pengguna": None,
-            })
-        auth.catat_baca_tamu(tamu, n["id"], urutan)
+    elif urutan > auth.BATAS_TAMU:
+        # bab di atas batas & belum login → tampilkan halaman gerbang
+        semua_awal = [dict(x) for x in ambil(
+            "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan LIMIT ?",
+            (n["id"], auth.BATAS_TAMU))]
+        return tpl.TemplateResponse(request, "gerbang.html", {
+            "situs": SITUS, "halaman": "bab", "nama": NAMA,
+            "judul": "Wajib Masuk: " + n["judul"] + " | " + NAMA,
+            "desk": "Bab 1-" + str(auth.BATAS_TAMU) + " bebas dibaca. Masuk untuk lanjut.",
+            "kanon": SITUS + "/novel/" + slug + "/bab/" + str(urutan),
+            "n": dict(n), "slug": slug, "urutan": urutan,
+            "batas": auth.BATAS_TAMU, "bab_awal": semua_awal,
+            "pengguna": None,
+        })
     gmb = [dict(x) for x in ambil(
         "SELECT urutan, file_lokal, url_asli, caption FROM bab_gambar WHERE bab_id=? ORDER BY urutan",
         (b["id"],))]
