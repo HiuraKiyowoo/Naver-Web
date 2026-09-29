@@ -1,5 +1,9 @@
 {% extends "base.html" %}
-{% block judul %}Masuk · {{ nama }}<script src="/static/auth-web.js?v={{ versi_aset() }}" defer></script>
+{% block judul %}Masuk · {{ nama }}
+{# ⚠️ /fb.js WAJIB dimuat SEBELUM auth-web.js — keduanya tanpa defer
+   supaya window.FB_KONFIG sudah terisi saat auth-web.js jalan #}
+<script src="/fb.js?v={{ versi_aset() }}"></script>
+<script src="/static/auth-web.js?v={{ versi_aset() }}" defer></script>
 {% endblock %}
 
 {% block isi %}
@@ -63,6 +67,5 @@
   </div>
 </div>
 
-{# ⚠️ Konfigurasi web Firebase (MEMANG publik — bukan rahasia) #}
-<meta name="fb-konfig" content='{{ fb_web | tojson }}' id="metaFb">
+{# config Firebase sudah dimuat di blok judul (sebelum auth-web.js) #}
 {% endblock %}

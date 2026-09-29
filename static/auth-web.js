@@ -11,11 +11,8 @@
 (function () {
   'use strict';
 
-  var meta = document.getElementById('metaFb');
-  if (!meta) return;
-
-  var KONFIG = {};
-  try { KONFIG = JSON.parse(meta.getAttribute('content') || '{}'); } catch (e) {}
+  /* config Firebase dipasok /static/fb.js (window.FB_KONFIG) */
+  var KONFIG = window.FB_KONFIG || {};
 
   var elGalat = document.getElementById('authGalat');
   var btnGoogle = document.getElementById('btnGoogle');

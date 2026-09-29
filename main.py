@@ -55,7 +55,7 @@ import auth
 import time
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse, RedirectResponse,
                                PlainTextResponse, Response)
 from fastapi.staticfiles import StaticFiles
@@ -460,6 +460,20 @@ FB_JSLIBS = [
     "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
     "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js",
 ]
+
+
+# ══════════════════════════════════════════════════════════════
+#  CONFIG FIREBASE WEB → BERKAS JS (bukan di dalam HTML)
+#  ⚠️ Config web Firebase MEMANG publik (bukan rahasia) — keamanannya
+#     pakai ATURAN IZIN, bukan menyembunyikan kunci.
+#     Dipisah ke berkas supaya HTML bersih & gampang diganti.
+# ══════════════════════════════════════════════════════════════
+@app.get("/fb.js")
+def fb_js():
+    isi = ("/* config Firebase WEB — dihasilkan server dari env (publik) */\n"
+           "window.FB_KONFIG = " + json.dumps(FB_WEB) + ";\n")
+    return Response(isi, media_type="application/javascript; charset=utf-8",
+                    headers={"Cache-Control": "public, max-age=300"})
 
 
 @app.get("/masuk", response_class=HTMLResponse)
