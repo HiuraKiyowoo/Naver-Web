@@ -110,10 +110,13 @@ img { display: block; }
    2) kipas dibuat MENGISI penuh (kartu = 100%/3) → kartu paling pinggir
       kena ROTASI keluar batas → muncul scrollbar horizontal → SEMUA SECTION
       IKUT GESER + gap kanan gede.
-   Sisa 26px dibiarkan TERBUKA (JANGAN pakai overflow di .fan → kartu
-   pinggir KEPOTONG). Halaman sudah dikunci: html/body overflow-x:hidden. */
-.fan{position:relative;height:215px;margin:0 14px;
-  --k:calc((100% - 26px)/3); --s:calc(var(--k)/2)}
+   ⚠️ PELAJARAN 29 Sep (berulang): kartu HARUS kecil supaya ujung yang
+      MIRING (rotate ±17.5°) tidak keluar layar & tidak bikin halaman geser.
+      Rumus aman: visual = kartu*(1+4*0.55) + kartu*0.35 = kartu*3.55
+      → --k = (100% - 90px)/3  membiarkan 90px untuk rotasi + margin.
+      JANGAN pakai overflow:hidden/clip di .fan (kartu kepotong). */
+.fan{position:relative;height:196px;margin:0 12px;
+  --k:calc((100% - 90px)/3); --s:calc(var(--k)*0.55)}
 .fi{position:absolute;bottom:0;width:var(--k);transform-origin:50% 100%;
   left:calc((100% - var(--k))/2); margin-left:calc((var(--i) - 2) * var(--s))}
 .fi img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:8px;box-shadow:0 10px 24px rgba(20,25,60,.3)}
