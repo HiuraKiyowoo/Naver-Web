@@ -46,6 +46,7 @@
     <a href="/jelajah"{% if halaman in ('jelajah','daftar','cari','genre','tag') %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">◎</span> Jelajah</a>
     <a href="/pustaka"{% if halaman == 'pustaka' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">▤</span> Pustaka</a>
     <a href="/profil"{% if halaman == 'profil' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">☺</span> Profil / Akun</a>
+    <a href="/request"{% if halaman == 'request' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">✦</span> Request</a>
   </nav>
   <div class="laci-kaki">Arsip pribadi · {{ total_novel|default('') }} novel</div>
 </aside>

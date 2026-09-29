@@ -992,3 +992,41 @@ body.ada-kunci{
   .logo-img{ height:26px; }
   .kaki-logo .logo-img{ height:28px; }
 }
+
+/* ══ HALAMAN REQUEST NOVEL ══ */
+.req-kotak{ padding:22px 20px; }
+.req-label{ display:block; font-size:12px; font-weight:600; color:#9FB4C8;
+  margin:14px 0 6px; letter-spacing:.2px; }
+.req-label:first-of-type{ margin-top:0; }
+.req-wajib{ color:#FF6B8A; }
+.req-input{ width:100%; box-sizing:border-box; background:rgba(255,255,255,.045);
+  border:1px solid rgba(160,200,240,.13); border-radius:9px; color:#E8F1F8;
+  font-size:14px; font-family:inherit; padding:11px 13px; outline:none;
+  transition:border-color .18s, background .18s; }
+.req-input:focus{ border-color:rgba(4,157,253,.5); background:rgba(4,157,253,.07); }
+.req-input::placeholder{ color:#5F7387; }
+.req-area{ resize:vertical; min-height:74px; line-height:1.55; }
+.req-kaki{ display:flex; align-items:center; justify-content:space-between;
+  margin-top:18px; gap:12px; }
+.req-hitung{ font-size:11px; color:#5F7387; }
+.req-pesan{ margin-top:13px; font-size:13px; line-height:1.5; min-height:0; }
+.req-pesan.ok{ color:#4FD1A5; }
+.req-pesan.gagal{ color:#FF8FB1; }
+.req-pesan.sedang{ color:#7FB6D8; }
+.req-masuk{ text-align:center; padding:34px 22px; }
+.req-masuk-ikon{ font-size:30px; color:#049DFD; margin-bottom:10px; }
+.req-masuk p{ margin:8px 0 18px; max-width:420px; margin-left:auto; margin-right:auto; }
+.req-masuk-aksi{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.req-daftar{ display:flex; flex-direction:column; gap:1px; }
+.req-baris{ display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:12px 15px; background:rgba(255,255,255,.03); border-radius:8px; }
+.req-baris-utama{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.req-baris-utama b{ font-size:13.5px; color:#DCE9F4; font-weight:600;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.req-baris-utama .redup{ font-size:11px; }
+.req-status{ font-size:10.5px; font-weight:600; padding:4px 9px; border-radius:6px;
+  letter-spacing:.3px; text-transform:lowercase; flex-shrink:0; }
+.req-status-baru{ background:rgba(4,157,253,.16); color:#6FC5F5; }
+.req-status-dikerjakan{ background:rgba(240,190,60,.16); color:#F2CE72; }
+.req-status-selesai{ background:rgba(79,209,165,.16); color:#63D9B0; }
+.req-status-ditolak{ background:rgba(255,107,138,.15); color:#FF8FB1; }

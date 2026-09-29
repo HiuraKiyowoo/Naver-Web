@@ -21,6 +21,28 @@ import os
 import re
 import sqlite3
 import secrets
+import urllib.request
+import urllib.parse
+import datetime
+
+
+# ── env bot Telegram (dibaca dari berkas, TIDAK pernah dicetak) ──
+def _muat_tele():
+    jalur = '/root/.hermes/tele-bot.env'
+    isi = {}
+    try:
+        for baris in open(jalur):
+            b = baris.strip()
+            if b.startswith('export '):
+                b = b[7:]
+            if '=' in b and not b.startswith('#'):
+                k, v = b.split('=', 1)
+                isi[k.strip()] = v.strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return isi.get('TELE_TOKEN', ''), isi.get('TELE_CHAT', '')
+
+TELE_TOKEN, TELE_CHAT = _muat_tele()
 
 # ⚠️ muat kunci Firebase dari ENV berkas (TIDAK pernah dicetak)
 try:
@@ -507,6 +529,128 @@ def api_auth_me(request: Request):
 # ══════════════════════════════════════════════════════════════
 #  FAVORIT — tambah / buang (wajib masuk)
 # ══════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
+#  TELEGRAM — pengirim pesan (dipakai fitur Request Novel)
+# ══════════════════════════════════════════════════════════════
+def kirim_telegram(teks, tombol=None):
+    """kirim HTML ke Telegram pemilik. Balikan True kalau sukses."""
+    if not TELE_TOKEN or not TELE_CHAT:
+        return False
+    data = {"chat_id": TELE_CHAT, "text": teks[:4000],
+            "parse_mode": "HTML", "disable_web_page_preview": "true"}
+    if tombol:
+        data["reply_markup"] = json.dumps({"inline_keyboard": tombol})
+    try:
+        req = urllib.request.Request(
+            "https://api.telegram.org/bot{}/sendMessage".format(TELE_TOKEN),
+            data=urllib.parse.urlencode(data).encode())
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.loads(r.read().decode()).get("ok", False)
+    except Exception as e:
+        print("  ⚠️ telegram gagal:", str(e)[:120])
+        return False
+
+
+def _esc(s):
+    """amankan teks untuk HTML Telegram"""
+    return (str(s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+
+
+# ══════════════════════════════════════════════════════════════
+#  REQUEST NOVEL — WAJIB MASUK
+# ══════════════════════════════════════════════════════════════
+@app.post("/api/request")
+async def api_request(request: Request):
+    pengguna = getattr(request.state, "pengguna", None)
+    if not pengguna:
+        return JSONResponse({"ok": False, "pesan": "masuk_dulu"}, status_code=401)
+    try:
+        isi = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "pesan": "data_salah"}, status_code=400)
+
+    judul = (isi.get("judul") or "").strip()
+    sumber = (isi.get("sumber") or "").strip()
+    catatan = (isi.get("catatan") or "").strip()
+    halaman = (isi.get("halaman") or "").strip()[:200]
+
+    if len(judul) < 2:
+        return JSONResponse({"ok": False, "pesan": "judul_kosong"}, status_code=400)
+    if len(judul) > 200 or len(sumber) > 400 or len(catatan) > 600:
+        return JSONResponse({"ok": False, "pesan": "kepanjangan"}, status_code=400)
+
+    # batas laju: 5 per jam
+    try:
+        if auth.permintaan_jumlah_kini(pengguna["id"], jam=1) >= 5:
+            return JSONResponse({"ok": False, "pesan": "terlalu_banyak",
+                                 "balasan": "Sudah 5 request dalam 1 jam terakhir. Coba lagi nanti ya."},
+                                status_code=429)
+    except Exception:
+        pass
+
+    # sudah ada di arsip kita?
+    ada_novel = ambil("SELECT slug, judul FROM novel WHERE lower(judul) LIKE lower(?) LIMIT 1",
+                      ("%" + judul + "%",), satu=True)
+
+    # simpan ke dB (selalu, walau tele gagal)
+    try:
+        baris = auth.permintaan_tambah(pengguna["id"], judul, sumber, catatan, halaman)
+        no = baris["id"] if baris else 0
+    except Exception as e:
+        print("  ⚠️ simpan request gagal:", str(e)[:120])
+        no = 0
+
+    # kirim ke Telegram
+    waktu = datetime.datetime.now().strftime("%d %b %Y, %H:%M")
+    nama = pengguna.get("nama") or pengguna.get("email") or "pengguna"
+    baris_tele = [
+        "🆕 <b>REQUEST NOVEL BARU</b>", "",
+        "📖 Judul  : <b>{}</b>".format(_esc(judul)),
+    ]
+    if sumber:
+        baris_tele.append("🔗 Sumber : {}".format(_esc(sumber)))
+    if catatan:
+        baris_tele.append("💬 Catatan: {}".format(_esc(catatan)))
+    baris_tele += [
+        "", "─────────────────",
+        "👤 Dari   : {}".format(_esc(nama)),
+        "📧 Akun   : {}".format(_esc(pengguna.get("email") or "-")),
+        "🌐 Halaman: {}".format(_esc(halaman or "-")),
+        "🕐 Waktu  : {} WIB".format(waktu),
+        "🔢 No.    : <b>#{}</b>".format(no),
+    ]
+    if ada_novel:
+        baris_tele += ["", "✅ <i>Mungkin sudah ada di arsip: {} (/{})</i>".format(
+            _esc(ada_novel["judul"]), _esc(ada_novel["slug"]))]
+
+    terkirim = kirim_telegram(chr(10).join(baris_tele))
+    if terkirim and no:
+        try:
+            auth._x("UPDATE request_novel SET telegram=1 WHERE id=?", (no,))
+        except Exception:
+            pass
+
+    if ada_novel:
+        balas = "Novel mirip sudah ada di arsip — tapi requestmu tetap kukirim."
+    else:
+        balas = "Request terkirim! Nanti dicek ya 🙏" if terkirim else                 "Request tersimpan. (notifikasi ke pemilik sedang tidak aktif)"
+    return JSONResponse({"ok": True, "no": no, "terkirim": terkirim,
+                         "ada_mirip": bool(ada_novel), "balasan": balas})
+
+
+@app.get("/api/request/saya")
+async def api_request_saya(request: Request):
+    pengguna = getattr(request.state, "pengguna", None)
+    if not pengguna:
+        return JSONResponse({"ok": False, "pesan": "masuk_dulu"}, status_code=401)
+    try:
+        b = auth.permintaan_daftar(pengguna["id"], batas=50)
+    except Exception:
+        b = []
+    return JSONResponse({"ok": True, "jumlah": len(b), "daftar": [
+        {"judul": r["judul"], "status": r["status"], "waktu": r["waktu"]} for r in b]})
+
+
 @app.post("/api/favorit")
 async def api_favorit(request: Request):
     pengguna = getattr(request.state, "pengguna", None)
@@ -859,6 +1003,27 @@ def _posisi_baca(pengguna_id):
     """novel_id -> urutan terakhir yang dibaca (paling baru di atas)"""
     baris = auth.riwayat(pengguna_id, batas=60)
     return [dict(r) for r in baris]
+
+
+# ══════════════════════════════════════════════════════════════
+#  HALAMAN: REQUEST NOVEL (menu laci · wajib masuk untuk kirim)
+# ══════════════════════════════════════════════════════════════
+@app.get("/request", response_class=HTMLResponse)
+def halaman_request(request: Request):
+    pengguna = getattr(request.state, "pengguna", None)
+    permintaan = []
+    if pengguna:
+        try:
+            permintaan = auth.permintaan_daftar(pengguna["id"], batas=30)
+        except Exception:
+            permintaan = []
+    return tpl.TemplateResponse(request, "request.html", {
+        "situs": SITUS, "halaman": "request", "nama": NAMA,
+        "judul": "Request Novel: " + NAMA,
+        "desk": "Minta novel baru untuk ditambahkan ke arsip.",
+        "kanon": SITUS + "/request",
+        "pengguna": pengguna, "permintaan": permintaan,
+    })
 
 
 @app.get("/pustaka", response_class=HTMLResponse)

@@ -264,6 +264,44 @@ def riwayat(pengguna_id, batas=30):
               (pengguna_id, batas))
 
 
+# ══════════════════════════════════════════════════════════════
+#  REQUEST NOVEL (wajib masuk) — dikirim ke Telegram pemilik
+# ══════════════════════════════════════════════════════════════
+def permintaan_tambah(pengguna_id, judul, sumber, catatan, halaman=""):
+    """simpan permintaan; balikan id baris baru"""
+    _x("""INSERT INTO request_novel
+          (pengguna_id, judul, sumber, catatan, halaman)
+          VALUES (?,?,?,?,?)""",
+       (pengguna_id, judul[:200], (sumber or "")[:400],
+        (catatan or "")[:600], (halaman or "")[:200]))
+    return _q("SELECT id, waktu FROM request_novel WHERE pengguna_id=? ORDER BY id DESC LIMIT 1",
+              (pengguna_id,), satu=True)
+
+
+def permintaan_cek_duplikat(judul):
+    """ada tidak permintaan dengan judul sama (belum selesai)?"""
+    r = _q("""SELECT 1 FROM request_novel
+              WHERE lower(judul)=lower(?) AND status='baru' LIMIT 1""", (judul,), satu=True)
+    return r is not None
+
+
+def permintaan_jumlah_kini(pengguna_id, jam=1):
+    """berapa permintaan dalam `jam` jam terakhir (batas laju)"""
+    import datetime as _dt
+    batas = (_dt.datetime.utcnow() - _dt.timedelta(hours=jam)).strftime('%Y-%m-%d %H:%M:%S')
+    r = _q("""SELECT COUNT(*) n FROM request_novel
+              WHERE pengguna_id=? AND waktu >= ?""",
+           (pengguna_id, batas), satu=True)
+    return r['n'] if r else 0
+
+
+def permintaan_daftar(pengguna_id=None, batas=50):
+    if pengguna_id:
+        return _q("SELECT * FROM request_novel WHERE pengguna_id=? ORDER BY id DESC LIMIT ?",
+                  (pengguna_id, batas))
+    return _q("SELECT * FROM request_novel ORDER BY id DESC LIMIT ?", (batas,))
+
+
 def favorit_tambah(pengguna_id, novel_id):
     _x('INSERT OR IGNORE INTO favorit (pengguna_id, novel_id) VALUES (?,?)',
        (pengguna_id, novel_id))

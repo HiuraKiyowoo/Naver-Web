@@ -376,3 +376,64 @@
     });
   });
 })();
+
+
+/* ══════════════════════════════════════════════════════════
+   FORMULIR REQUEST NOVEL
+   ══════════════════════════════════════════════════════════ */
+(function(){
+  var f = document.getElementById('formRequest');
+  if (!f) return;
+  var judul = document.getElementById('reqJudul');
+  var sumber = document.getElementById('reqSumber');
+  var catatan = document.getElementById('reqCatatan');
+  var hitung = document.getElementById('reqHitung');
+  var tombol = document.getElementById('reqKirim');
+  var pesan = document.getElementById('reqPesan');
+  var sibuk = false;
+
+  function tulis(kelas, teks){ pesan.className = 'req-pesan ' + (kelas || ''); pesan.textContent = teks || ''; }
+
+  catatan.addEventListener('input', function(){
+    hitung.textContent = catatan.value.length + '/600';
+  });
+
+  function kirim(){
+    if (sibuk) return;
+    var j = judul.value.trim();
+    if (j.length < 2){ tulis('gagal', 'Judulnya diisi dulu ya (minimal 2 huruf).'); judul.focus(); return; }
+    sibuk = true;
+    tombol.disabled = true;
+    tulis('sedang', 'Mengirim…');
+    fetch('/api/request', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        judul: j,
+        sumber: sumber.value.trim(),
+        catatan: catatan.value.trim(),
+        halaman: location.pathname
+      })
+    }).then(function(r){
+      if (r.status === 401){ location.href = '/masuk?lanjut=/request'; return null; }
+      return r.json();
+    }).then(function(d){
+      sibuk = false;
+      tombol.disabled = false;
+      if (!d) return;
+      if (d.ok){
+        tulis('ok', d.balasan || 'Request terkirim!');
+        judul.value = ''; sumber.value = ''; catatan.value = '';
+        hitung.textContent = '0/600';
+      } else {
+        tulis('gagal', d.balasan || 'Gagal mengirim. Coba lagi ya.');
+      }
+    }).catch(function(){
+      sibuk = false; tombol.disabled = false;
+      tulis('gagal', 'Koneksi bermasalah. Coba lagi ya.');
+    });
+  }
+
+  f.addEventListener('submit', function(e){ e.preventDefault(); kirim(); });
+})();

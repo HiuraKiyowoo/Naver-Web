@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block judul %}{{ judul }}{% endblock %}
+
+{% block isi %}
+<div class="wadah">
+  <div class="kepala-halaman">
+    <h1>Request Novel</h1>
+    <span>Novel yang kamu cari belum ada? Bilang aja di sini</span>
+  </div>
+
+  {% if not pengguna %}
+  {# ── BELUM MASUK ── #}
+  <div class="panel req-masuk">
+    <div class="req-masuk-ikon" aria-hidden="true">✦</div>
+    <b>Perlu masuk dulu</b>
+    <p class="redup">Fitur request hanya untuk yang sudah punya akun — biar requestnya terlacak dan bisa kubalas.</p>
+    <div class="req-masuk-aksi">
+      <a class="tombol tombol-utama" href="/masuk?lanjut=/request">Masuk / Daftar</a>
+      <a class="tombol tombol-abu" href="/jelajah">Jelajah dulu</a>
+    </div>
+  </div>
+
+  {% else %}
+  {# ── SUDAH MASUK: formulir ── #}
+  <div class="panel req-kotak">
+    <form id="formRequest" novalidate>
+      <label class="req-label" for="reqJudul">Judul novel <span class="req-wajib">*</span></label>
+      <input class="req-input" id="reqJudul" name="judul" type="text" maxlength="200"
+             placeholder="Contoh: Omniscient Reader's Viewpoint" autocomplete="off" required>
+
+      <label class="req-label" for="reqSumber">Link sumber <span class="redup">(opsional)</span></label>
+      <input class="req-input" id="reqSumber" name="sumber" type="text" maxlength="400"
+             placeholder="https://… (kalau ada)" autocomplete="off" inputmode="url">
+
+      <label class="req-label" for="reqCatatan">Catatan <span class="redup">(opsional)</span></label>
+      <textarea class="req-input req-area" id="reqCatatan" name="catatan" maxlength="600" rows="3"
+                placeholder="Maksudku novel yang… / sudah tamat belum?"></textarea>
+
+      <div class="req-kaki">
+        <span class="req-hitung" id="reqHitung">0/600</span>
+        <button class="tombol tombol-utama" type="submit" id="reqKirim">Kirim Request</button>
+      </div>
+      <div class="req-pesan" id="reqPesan" role="status" aria-live="polite"></div>
+    </form>
+  </div>
+
+  {# ── RIWAYAT REQUEST-MU ── #}
+  {% if permintaan %}
+  <div class="pustaka-bagian">
+    <h2 class="pustaka-judul">Request kamu</h2>
+    <div class="req-daftar">
+      {% for r in permintaan %}
+      <div class="req-baris">
+        <div class="req-baris-utama">
+          <b>{{ r.judul }}</b>
+          <span class="redup">{{ r.waktu[:16] if r.waktu else '' }}</span>
+        </div>
+        <span class="req-status req-status-{{ r.status }}">{{ r.status }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}
