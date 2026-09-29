@@ -20,11 +20,13 @@ import json
 import os
 import re
 import sqlite3
+import secrets
+import auth
 import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
+from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse, RedirectResponse,
                                PlainTextResponse, Response)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -34,6 +36,30 @@ ROOT = BASE.parent
 DB = ROOT / "naver.db"
 
 app = FastAPI(title="Naver Web", docs_url=None, redoc_url=None)
+
+
+# ═════════════════════════════════════════════════════════════
+#  AUTH — baca cookie sesi (pengguna) & tamu di setiap permintaan
+# ═════════════════════════════════════════════════════════════
+@app.middleware("http")
+async def _siapkan_pengguna(request: Request, call_next):
+    """Tempelkan request.state.pengguna (kalau login) & .tamu (selalu)."""
+    request.state.pengguna = None
+    request.state.tamu = auth.tamu_sah(request.cookies.get(auth.COOKIE_TAMU))
+    try:
+        tok = request.cookies.get(auth.COOKIE_SESI)
+        if tok:
+            request.state.pengguna = auth.pengguna_dari_sesi(tok)
+    except Exception:
+        request.state.pengguna = None
+    resp = await call_next(request)
+    # pasang cookie TAMU kalau belum ada (httpOnly → tidak bisa dibaca JS)
+    if not request.state.tamu and request.url.path not in ('/static',):
+        baru = auth.tamu_baru()
+        resp.set_cookie(auth.COOKIE_TAMU, auth.bungkus_tamu(baru),
+                        max_age=60 * 60 * 24 * auth.UMUR_TAMU,
+                        httponly=True, samesite='lax', secure=False)
+    return resp
 # ⚠️ BERKAS GAMBAR (cover & ilustrasi) DISAJIKAN LANGSUNG dari disk.
 #    Dulu web TIDAK punya route /cover/* → beranda minta /cover/1987.webp
 #    ke port 8100 → 404 → browser menampilkan ikon "kertas rusak" di
@@ -321,6 +347,27 @@ def bab(request: Request, slug: str, urutan: int):
     b = ambil("SELECT * FROM bab WHERE novel_id=? AND urutan=?", (n["id"], urutan), satu=True)
     if not b:
         raise HTTPException(404)
+
+    # ── GERBANG 3 BAB (dihitung PER NOVEL, bukan total) ──
+    pengguna = getattr(request.state, "pengguna", None)
+    tamu = getattr(request.state, "tamu", None)
+    if pengguna:
+        auth.catat_baca(pengguna["id"], n["id"], urutan)
+    else:
+        if not auth.boleh_baca_tanpa_login(tamu, n["id"], urutan):
+            semua_awal = [dict(x) for x in ambil(
+                "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan LIMIT 3",
+                (n["id"],))]
+            return tpl.TemplateResponse(request, "gerbang.html", {
+                "situs": SITUS, "halaman": "bab", "nama": NAMA,
+                "judul": "Wajib Masuk: " + n["judul"] + " | " + NAMA,
+                "desk": "Bab 1-3 gratis. Masuk untuk lanjut membaca.",
+                "kanon": SITUS + "/novel/" + slug + "/bab/" + str(urutan),
+                "n": dict(n), "slug": slug, "urutan": urutan,
+                "batas": auth.BATAS_TAMU, "bab_awal": semua_awal,
+                "pengguna": None,
+            })
+        auth.catat_baca_tamu(tamu, n["id"], urutan)
     gmb = [dict(x) for x in ambil(
         "SELECT urutan, file_lokal, url_asli, caption FROM bab_gambar WHERE bab_id=? ORDER BY urutan",
         (b["id"],))]
@@ -354,6 +401,96 @@ def bab(request: Request, slug: str, urutan: int):
 # ═════════════════════════════════════════════════════════════
 #  HALAMAN: JELAJAH / GENRE / TAG / CARI
 # ═════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════
+#  HALAMAN MASUK / DAFTAR  +  API AUTH (Firebase)
+# ═════════════════════════════════════════════════════════════
+FB_WEB = {
+    "apiKey":            os.environ.get("FB_API_KEY", ""),
+    "authDomain":        os.environ.get("FB_AUTH_DOMAIN", ""),
+    "projectId":         os.environ.get("FB_PROJECT_ID", ""),
+    "storageBucket":     os.environ.get("FB_STORAGE_BUCKET", ""),
+    "messagingSenderId": os.environ.get("FB_SENDER_ID", ""),
+    "appId":             os.environ.get("FB_APP_ID", ""),
+}
+FB_JSLIBS = [
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js",
+]
+
+
+@app.get("/masuk", response_class=HTMLResponse)
+def masuk(request: Request):
+    return tpl.TemplateResponse(request, "masuk.html", {
+        "situs": SITUS, "halaman": "masuk", "nama": NAMA,
+        "judul": f"Masuk · {NAMA}",
+        "desk": "Masuk untuk membaca semua bab, simpan riwayat & pustaka pribadi.",
+        "kanon": f"{SITUS}/masuk",
+        "fb_web": FB_WEB, "fb_jslibs": FB_JSLIBS,
+        "fb_siap": bool(FB_WEB["apiKey"] and auth.firebase_siap()),
+        "pengguna": getattr(request.state, "pengguna", None),
+    })
+
+
+@app.post("/api/auth/sesi")
+async def api_auth_sesi(request: Request):
+    """Tukar ID token Firebase (dari browser) dengan cookie sesi web.
+
+    ⚠️ Token DIVERIFIKASI di server (firebase-admin) — bukan dipercaya begitu saja.
+    """
+    if auth.terlalu_sering("ip:" + (request.client.host if request.client else "-")):
+        return JSONResponse({"ok": False, "pesan": "Terlalu banyak percobaan. Coba lagi nanti."}, 429)
+    auth.catat_coba("ip:" + (request.client.host if request.client else "-"))
+
+    data = {}
+    try:
+        data = await request.json()
+    except Exception:
+        pass
+    id_token = (data or {}).get("idToken", "")
+    if not id_token:
+        return JSONResponse({"ok": False, "pesan": "Token tidak ada."}, 400)
+
+    klaim = auth.verifikasi_token(id_token)
+    if not klaim:
+        return JSONResponse({"ok": False, "pesan": "Token tidak sah atau kadaluarsa."}, 401)
+
+    p = auth.pengguna_dari_firebase(klaim)
+    if not p:
+        return JSONResponse({"ok": False, "pesan": "Gagal membuat akun."}, 500)
+
+    tok = auth.buat_sesi(
+        p["id"],
+        request.client.host if request.client else None,
+        request.headers.get("user-agent"),
+    )
+    resp = JSONResponse({
+        "ok": True,
+        "pengguna": {"nama": p["nama"], "email": p["email"], "foto": p["foto"]},
+        "lanjut": (data or {}).get("lanjut") or "/",
+    })
+    resp.set_cookie(auth.COOKIE_SESI, tok, max_age=60 * 60 * 24 * auth.UMUR_SESI,
+                    httponly=True, samesite="lax", secure=True)
+    return resp
+
+
+@app.get("/api/auth/me")
+def api_auth_me(request: Request):
+    p = getattr(request.state, "pengguna", None)
+    if not p:
+        return JSONResponse({"ok": True, "masuk": False})
+    return JSONResponse({"ok": True, "masuk": True,
+                         "pengguna": {"nama": p["nama"], "email": p["email"], "foto": p["foto"]}})
+
+
+@app.post("/keluar")
+@app.get("/keluar")
+def keluar(request: Request):
+    auth.akhiri_sesi(request.cookies.get(auth.COOKIE_SESI))
+    resp = RedirectResponse("/", status_code=303)
+    resp.delete_cookie(auth.COOKIE_SESI)
+    return resp
+
+
 @app.get("/jelajah", response_class=HTMLResponse)
 def jelajah(request: Request,
             q: str = "", status: str = "", tipe: str = "",

@@ -690,3 +690,68 @@ body.laci-ada { overflow: hidden; }
   .mg-meta.mg-anim, .mg-tags.mg-anim, .mg-nav.mg-anim { animation: none; }
   .mg-cov img { transition: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   HALAMAN MASUK / DAFTAR
+   ══════════════════════════════════════════════════════════════ */
+.auth-tirai { min-height: calc(100vh - 58px); display: grid; place-items: center;
+  padding: 28px 16px 60px; background:
+    radial-gradient(900px 420px at 50% -8%, rgba(4,157,253,.10), transparent 62%); }
+.auth-kotak { width: 100%; max-width: 396px; background: var(--panel);
+  border: 1px solid rgba(160,200,240,.10); border-radius: 12px; padding: 26px 22px 22px; }
+.auth-logo { display: block; font-weight: 900; font-size: 21px; color: var(--cyan);
+  letter-spacing: -.03em; text-decoration: none; margin-bottom: 14px; }
+.auth-judul { margin: 0 0 8px; font-size: 19px; font-weight: 900; color: #F2F7FC; line-height: 1.3; }
+.auth-sub { margin: 0 0 18px; font-size: 12.5px; line-height: 1.65; color: var(--samar); }
+.auth-sub b { color: var(--cyan); }
+.auth-info { padding: 11px 13px; border-radius: 8px; margin-bottom: 14px; font-size: 12px;
+  line-height: 1.6; background: rgba(240,180,60,.10); border: 1px solid rgba(240,180,60,.30);
+  color: #F2D79A; }
+.auth-info code { background: rgba(0,0,0,.3); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+.auth-galat { padding: 10px 13px; border-radius: 8px; margin-bottom: 14px; font-size: 12px;
+  line-height: 1.55; background: rgba(240,90,90,.12); border: 1px solid rgba(240,90,90,.32);
+  color: #FFC9C9; }
+
+.auth-google { width: 100%; height: 44px; display: flex; align-items: center;
+  justify-content: center; gap: 10px; border: 1px solid rgba(160,200,240,.16);
+  background: rgba(255,255,255,.04); color: #F2F7FC; border-radius: 8px;
+  font-size: 13.5px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.auth-google:hover { background: rgba(255,255,255,.09); }
+.auth-google:disabled { opacity: .45; cursor: not-allowed; }
+.auth-atau { display: flex; align-items: center; gap: 10px; margin: 16px 0;
+  color: var(--samar); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.auth-atau::before, .auth-atau::after { content: ''; flex: 1; height: 1px;
+  background: rgba(160,200,240,.14); }
+
+.auth-form { display: flex; flex-direction: column; }
+.auth-label { font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--samar); margin-bottom: 6px; }
+.auth-input { height: 44px; padding: 0 13px; margin-bottom: 14px; border-radius: 8px;
+  border: 1px solid rgba(160,200,240,.16); background: rgba(0,0,0,.28);
+  color: #F2F7FC; font-size: 14px; font-family: inherit; }
+.auth-input:focus { outline: 0; border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(4,157,253,.16); }
+.auth-tombol { height: 46px; margin-top: 2px; border: 0; border-radius: 8px;
+  background: var(--cyan); color: #06202F; font-size: 14px; font-weight: 900;
+  cursor: pointer; font-family: inherit; }
+.auth-tombol:hover { background: var(--cyan2); }
+.auth-tombol:disabled { opacity: .6; cursor: not-allowed; }
+
+.auth-ali { margin-top: 14px; font-size: 12.5px; color: var(--samar); text-align: center; }
+.auth-ali a { color: var(--cyan); font-weight: 800; text-decoration: none; margin-left: 5px; }
+.auth-ali a:hover { text-decoration: underline; }
+.auth-lewat { display: block; margin-top: 18px; padding-top: 14px; text-align: center;
+  font-size: 12px; color: var(--samar); text-decoration: none;
+  border-top: 1px solid rgba(160,200,240,.10); }
+.auth-lewat:hover { color: var(--cyan); }
+
+/* ── pemberitahuan wajib login di halaman bab ── */
+.gerbang { max-width: 560px; margin: 26px auto; padding: 26px 22px; text-align: center;
+  background: var(--panel); border: 1px solid rgba(160,200,240,.12); border-radius: 12px; }
+.gerbang-ikon { font-size: 34px; margin-bottom: 10px; }
+.gerbang h2 { margin: 0 0 10px; font-size: 19px; font-weight: 900; color: #F2F7FC; }
+.gerbang p { margin: 0 0 16px; font-size: 13px; line-height: 1.7; color: var(--samar); }
+.gerbang p b { color: var(--cyan); }
+.gerbang-aksi { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.gerbang-petunjuk { margin-top: 18px; font-size: 11.5px; color: var(--samar);
+  padding-top: 14px; border-top: 1px solid rgba(160,200,240,.10); }
