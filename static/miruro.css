@@ -100,6 +100,27 @@ img { display: block; }
 .fan{position:relative;height:190px;margin:0 20px}
 .fi{position:absolute;bottom:0;width:104px;left:calc(50% - 160px);transform-origin:50% 100%}
 .fi img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:8px;box-shadow:0 10px 24px rgba(20,25,60,.3)}
+
+/* ── animasi kipas: (1) MEKAR saat masuk layar · (3) TERANGKAT saat ditunjuk ──
+   ⚠️ pakai transform/opacity saja (murah di HP). Kalau kipas belum mekar,
+   kartu tetap terlihat penuh (fallback) — animasi cuma menambahkan gerak. */
+@keyframes kipas-mekar{
+  from{opacity:0;transform:translateY(calc(var(--ty,0px) + 22px)) rotate(0deg) scale(.9)}
+  to{opacity:1;transform:translateY(var(--ty,0px)) rotate(var(--r,0deg)) scale(1)}
+}
+/* 1a. JS hidup → kartu disembunyikan dulu, lalu mekar (berurutan/stagger).
+   ⚠️ HANYA kalau kelas .kipas-siap ada (dipasang web.js) → jadi kalau JS mati
+   atau Reduced Motion, kartu TIDAK pernah tersembunyi (aman). */
+.fan.kipas-siap .fi{opacity:0;transform:translateY(calc(var(--ty,0px) + 22px)) rotate(0deg) scale(.9);
+  animation:kipas-mekar .52s cubic-bezier(.2,.8,.25,1) both}
+.fan.kipas-mekar .fi{animation:kipas-mekar .52s cubic-bezier(.2,.8,.25,1) both}
+/* (3) ditunjuk/disentuh → terangkat + tegak + paling depan */
+.fan .fi:hover,.fan .fi:focus-visible{
+  z-index:9 !important; outline:none;
+  transform:translateY(calc(var(--ty,0px) - 10px)) rotate(0deg) scale(1.06) !important;
+  transition:transform .22s cubic-bezier(.2,.8,.25,1);
+}
+.fan .fi:hover img{box-shadow:0 16px 32px rgba(4,157,253,.35);filter:brightness(1.12)}
 .fi:hover img { filter: brightness(1.12); }
 .bd{display:inline-flex;gap:5px;background:rgba(20,24,52,.75);backdrop-filter:blur(6px);color:#fff;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:900}
 .bd em{font-style:normal}

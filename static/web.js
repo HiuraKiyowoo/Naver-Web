@@ -101,4 +101,40 @@
     window.addEventListener('resize', segarkan);
     segarkan();
   });
+  /* ── 4. KIPAS "Jelajahi Acak": mekar saat masuk layar (#1)
+         + kartu terangkat saat ditunjuk (#3).
+     Hemat: cuma pakai transform/opacity (tidak memicu layout ulang).
+     Animasi baru jalan saat section masuk layar (IntersectionObserver). */
+  var kipas = document.querySelector('.fan');
+  if (kipas && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var kartuKipas = Array.prototype.slice.call(kipas.querySelectorAll('.fi'));
+    kipas.classList.add('kipas-siap');
+
+    /* Sudut asli (--r) & geser (--ty) SUDAH dipasang dari server di _kipas.html
+       → tidak perlu hitung ulang di sini. Kalau ada yang kosong, isi cadangan. */
+    kartuKipas.forEach(function (el) {
+      if (!el.style.getPropertyValue('--r')) {
+        var m = /rotate\((-?[\d.]+)deg\)/.exec(el.getAttribute('style') || '');
+        el.style.setProperty('--r', (m ? m[1] : '0') + 'deg');
+      }
+    });
+
+    function mekar() {
+      kartuKipas.forEach(function (el, i) {
+        el.style.animationDelay = (i * 60) + 'ms';
+      });
+      kipas.classList.add('kipas-mekar');
+    }
+
+    if ('IntersectionObserver' in window) {
+      var amat = new IntersectionObserver(function (masuk) {
+        masuk.forEach(function (m) {
+          if (m.isIntersecting) { mekar(); amat.disconnect(); }
+        });
+      }, { threshold: 0.25 });
+      amat.observe(kipas);
+    } else {
+      mekar();
+    }
+  }
 })();
