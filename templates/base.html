@@ -38,19 +38,9 @@
   </div>
   <nav class="laci-nav">
     <a href="/"{% if halaman == 'beranda' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">⌂</span> Home</a>
-    <a href="/jelajah"{% if halaman in ('jelajah','daftar') %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">◎</span> Jelajah</a>
+    <a href="/jelajah"{% if halaman in ('jelajah','daftar','cari','genre','tag') %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">◎</span> Jelajah</a>
     <a href="/pustaka"{% if halaman == 'pustaka' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">▤</span> Pustaka</a>
-    <a href="/profil"{% if halaman == 'profil' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">☺</span> Profil</a>
-    <div class="laci-pisah"></div>
-    <a href="/cari"{% if halaman == 'cari' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">⌕</span> Cari</a>
-    <a href="/jelajah"{% if halaman == 'genre' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">◈</span> Telusuri Genre</a>
-    <a href="/jelajah"{% if halaman == 'tag' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">#</span> Tag Populer</a>
-    <a href="/jelajah?order=rating"><span class="laci-ikon" aria-hidden="true">★</span> Rating Tertinggi</a>
-    <a href="/jelajah?order=baru"><span class="laci-ikon" aria-hidden="true">✦</span> Baru Ditambahkan</a>
-    <a href="/jelajah?status=Completed"><span class="laci-ikon" aria-hidden="true">✔</span> Sudah Tamat</a>
-    <div class="laci-pisah"></div>
-    <a href="/apk"><span class="laci-ikon" aria-hidden="true">▣</span> APK Android</a>
-    <a href="/status"><span class="laci-ikon" aria-hidden="true">⚙</span> Status Server</a>
+    <a href="/profil"{% if halaman == 'profil' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">☺</span> Profil / Akun</a>
   </nav>
   <div class="laci-kaki">Arsip pribadi · {{ total_novel|default('') }} novel</div>
 </aside>
