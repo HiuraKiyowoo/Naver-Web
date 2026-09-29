@@ -324,35 +324,9 @@
 
 
 /* ══════════════════════════════════════════════════════════
-   POP-UP LOGIN: naik dari bawah, TANPA tirai gelap
-   (halaman tetap seperti biasa, isi bab hanya diburamkan)
-   (bab di atas batas, pengunjung belum login)
+   GERBANG BAB: kotak login nempel di bawah (fixed)
+   → cukup beri kelas pada body supaya isi bab dapat ruang bawah
    ══════════════════════════════════════════════════════════ */
 (function(){
-  var pop = document.getElementById('popupGerbang');
-  if (!pop) return;
-  var tut = document.getElementById('pgTutup');
-  document.body.classList.add('popup-ada');
-
-  function buka(){
-    requestAnimationFrame(function(){
-      if (tir) tir.classList.add('tampil');
-      pop.classList.add('tampil');
-    });
-    // fokus ke tombol masuk biar bisa langsung Enter (aksesibilitas)
-    var m = pop.querySelector('.pg-aksi .tombol-utama');
-    if (m) setTimeout(function(){ try { m.focus({preventScroll:true}); } catch(e){} }, 430);
-  }
-  function tutup(){
-    pop.classList.remove('tampil');
-    if (tir) tir.classList.remove('tampil');
-  }
-
-  buka();
-  if (tut) tut.addEventListener('click', tutup);
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape') tutup();
-  });
-  // tap tirai = tutup
-  if (tir) tir.addEventListener('click', tutup);
+  if (document.querySelector('.kunci')) document.body.classList.add('ada-kunci');
 })();

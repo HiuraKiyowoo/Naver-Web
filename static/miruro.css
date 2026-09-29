@@ -781,88 +781,124 @@ body.laci-ada { overflow: hidden; }
    ══════════════════════════════════════════════════════════ */
 
 /* isi bab disamarkan: tetap terlihat bentuknya, tapi tidak terbaca */
-.baca.baca-terkunci .baca-isi{
-  filter: blur(6px) saturate(.8);
-  opacity:.62;
-  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 62%,rgba(0,0,0,.4) 88%,transparent 100%);
-          mask-image:linear-gradient(180deg,#000 0%,#000 62%,rgba(0,0,0,.4) 88%,transparent 100%);
-  pointer-events:none;
-  user-select:none;
-  max-height:78vh;
-  overflow:hidden;
-}
-.baca.baca-terkunci .baca-isi p{ user-select:none; }
-.baca.baca-terkunci h1,
-.baca.baca-terkunci .baca-meta{ opacity:.75; }
 /* jangan biarkan bisa ditekan/di-scroll jadi terbaca */
-.baca.baca-terkunci figcaption{ opacity:.4; }
-
 /* pop-up naik dari bawah */
-.popup-naik{
-  position:fixed; left:0; right:0; bottom:0; z-index:59;
-  background:linear-gradient(180deg,#1A1F26 0%,#12151A 100%);
-  border-top:1px solid rgba(4,157,253,.34);
-  border-radius:18px 18px 0 0;
-  box-shadow:0 -18px 48px rgba(0,0,0,.62), 0 -1px 0 rgba(255,255,255,.04) inset;
-  padding:10px 18px calc(18px + env(safe-area-inset-bottom, 0px));
-  transform:translateY(104%);
-  transition:transform .42s cubic-bezier(.22,.9,.28,1);
-  max-width:660px; margin:0 auto;
-  will-change:transform;
-}
-.popup-naik.tampil{ transform:translateY(0); }
-
-.pg-gagang{ width:42px; height:4px; border-radius:999px;
-  background:rgba(255,255,255,.22); margin:0 auto 12px; }
-
-.pg-kepala{ display:flex; gap:12px; align-items:flex-start; }
-.pg-gembok{ display:inline-flex; align-items:center; justify-content:center;
-  width:38px; height:38px; border-radius:11px; flex:0 0 auto;
-  background:rgba(4,157,253,.14); color:#38BDF8;
-  border:1px solid rgba(4,157,253,.30); }
-.pg-gembok .ikon-gembok{ width:19px; height:19px; }
-.pg-kepala h3{ margin:0 0 4px; font-size:15px; font-weight:700; color:#F2F7FC; }
-.pg-kepala p{ margin:0; font-size:12.5px; line-height:1.55; color:#A8BBCE; }
-.pg-kepala p b{ color:#38BDF8; }
-
-.pg-isi{ margin-top:14px; }
-.pg-baris{ display:flex; flex-direction:column; gap:2px;
-  padding:11px 13px; border-radius:10px;
-  background:rgba(255,255,255,.045); border:1px solid rgba(160,200,240,.10); }
-.pg-baris b{ font-size:13px; color:#F2F7FC; font-weight:600; }
-.pg-baris span{ font-size:11px; color:#8FA3B8; }
-
-.pg-aksi{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:12px; }
-.pg-aksi .tombol{ margin:0; }
-
-.pg-petunjuk{ margin-top:13px; }
-.pg-petunjuk > span{ display:block; font-size:11px; color:#8FA3B8; margin-bottom:7px; }
-.pg-pil{ display:flex; gap:7px; flex-wrap:wrap; }
-.pg-pil a{ font-size:11.5px; padding:6px 11px; border-radius:8px;
-  background:rgba(255,255,255,.06); color:#CFE2F3; text-decoration:none;
-  border:1px solid rgba(160,200,240,.10); }
-.pg-pil a:hover{ background:rgba(4,157,253,.20); color:#fff; }
-
-.pg-tutup{ display:block; width:100%; margin-top:13px; padding:10px;
-  background:none; border:0; color:#7E93A8; font-size:12px; cursor:pointer;
-  font-family:inherit; }
-.pg-tutup:hover{ color:#A8BBCE; }
-
 /* HP kecil */
 @media (max-width:380px){
-  .popup-naik{ padding:9px 14px calc(15px + env(safe-area-inset-bottom, 0px)); }
-  .pg-kepala h3{ font-size:14px; }
-  .pg-kepala p{ font-size:11.5px; }
-  .pg-aksi{ gap:7px; }
-}
+  }
 
 /* hormati pengguna yang minta animasi minim */
 @media (prefers-reduced-motion: reduce){
-  .popup-naik{ transition:none; }
   }
 
 
-/* ══ GERBANG: pop-up login tanpa tirai gelap ══ */
-body.popup-ada{ padding-bottom:290px; }
-@media (max-width:380px){ body.popup-ada{ padding-bottom:270px; } }
-.popup-naik{ border-top-left-radius:18px; border-top-right-radius:18px; }
+/* ══════════════════════════════════════════════════════════
+   GERBANG BAB: halaman tampil seperti biasa, isi diburamkan,
+   + kotak ajakan login NEMPEL DI BAWAH (fixed, tidak bisa digeser)
+   ══════════════════════════════════════════════════════════ */
+
+/* isi bab diburamkan — tetap di posisinya, hanya tidak terbaca */
+/* beri ruang bawah supaya isi bab tidak ketutup kotak yang nempel */
+/* KOTAK LOGIN — nempel di bawah layar, TIDAK ikut geser */
+.kunci{
+  position:fixed; left:0; right:0; bottom:0; z-index:57;
+  background:linear-gradient(180deg,#1A1F26 0%,#141920 62%,#12151A 100%);
+  border-top:1px solid rgba(4,157,253,.30);
+  box-shadow:0 -14px 40px rgba(0,0,0,.55);
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  text-align:center;
+  animation:kunciNaik .38s cubic-bezier(.22,.9,.28,1) both;
+}
+@keyframes kunciNaik{ from{ transform:translateY(38px); opacity:0 } to{ transform:none; opacity:1 } }
+
+.kunci-ikon{ display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:10px; margin-bottom:8px;
+  background:rgba(4,157,253,.14); color:#38BDF8;
+  border:1px solid rgba(4,157,253,.28); }
+.kunci-ikon .ikon-gembok{ width:17px; height:17px; }
+.kunci h3{ margin:0 0 5px; font-size:14.5px; font-weight:700; color:#F2F7FC; }
+.kunci p{ margin:0 auto; max-width:430px; font-size:12px; line-height:1.55; color:#A8BBCE; }
+.kunci p b{ color:#38BDF8; }
+
+.kunci-tombol{ display:flex; gap:9px; justify-content:center; margin-top:12px; }
+.kunci-tombol .tombol{ margin:0; }
+
+.kunci-pil{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center;
+  margin-top:11px; align-items:center; }
+.kunci-pil > span{ font-size:10.5px; color:#8FA3B8; }
+.kunci-pil a{ font-size:11px; padding:5px 10px; border-radius:8px;
+  background:rgba(255,255,255,.06); color:#CFE2F3; text-decoration:none;
+  border:1px solid rgba(160,200,240,.10); }
+.kunci-pil a:hover{ background:rgba(4,157,253,.20); color:#fff; }
+
+@media (max-width:380px){
+  .kunci{ padding:12px 13px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .kunci h3{ font-size:13.5px; }
+  .kunci p{ font-size:11.5px; }
+  .kunci-tombol{ gap:7px; }
+}
+@media (prefers-reduced-motion: reduce){
+  .kunci{ animation:none; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   GERBANG BAB — isi diburamkan PENUH dan halaman TIDAK bisa discroll
+   (bab 4+ saat belum login)
+   ══════════════════════════════════════════════════════════ */
+
+/* halaman baca dipaku setinggi layar → tidak ada scroll sama sekali */
+body.ada-kunci{
+  overflow:hidden !important;
+  height:100vh;
+  overscroll-behavior:none;
+}
+
+/* isi bab: diburamkan penuh, dipotong tepat di atas kotak login */
+.baca.baca-terkunci .baca-isi{
+  filter:blur(6.5px) saturate(.85);
+  opacity:.55;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  max-height:calc(100vh - 330px);
+  overflow:hidden;
+}
+.baca.baca-terkunci .baca-isi p{
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+/* ilustrasi di dalam bab ikut diburamkan & dimatikan */
+.baca.baca-terkunci .baca-illust{
+  filter:blur(6.5px);
+  opacity:.5;
+  pointer-events:none;
+}
+
+/* judul & meta tetap jelas (biar terasa "tampil seperti biasa") */
+.baca.baca-terkunci h1,
+.baca.baca-terkunci .baca-meta{
+  opacity:.9;
+}
+
+/* bilah atas nempel di atas isi yang buram */
+body.ada-kunci .baca-bilah{
+  position:fixed;
+  top:0; left:0; right:0;
+  z-index:58;
+  background:rgba(18,21,26,.94);
+  -webkit-backdrop-filter:blur(10px);
+          backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(160,200,240,.08);
+}
+
+/* panel daftar bab di bawah tetap ada, tapi tidak bisa digapai saat terkunci */
+body.ada-kunci #daftar-bab{ display:none; }
+
+/* daftar bab & navigasi disembunyikan supaya tidak ada jalan pintas */
+.baca.baca-terkunci .baca-navigasi{ visibility:hidden; }
+
+@media (max-width:380px){
+  .baca.baca-terkunci .baca-isi{ max-height:calc(100vh - 310px); }
+}

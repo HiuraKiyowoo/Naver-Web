@@ -1,42 +1,6 @@
 {% extends "base.html" %}
-{% block judul %}{{ judul }}
+{% block judul %}{{ judul }}{% endblock %}
 
-
-{# ══ POP-UP LOGIN (naik dari bawah) — TANPA tirai gelap ══ #}
-{% if gerbang_dasar %}
-<div class="popup-naik" id="popupGerbang" role="dialog" aria-modal="true"
-     aria-labelledby="pgJudul">
-  <div class="pg-gagang" aria-hidden="true"></div>
-  <div class="pg-kepala">
-    <span class="pg-gembok" aria-hidden="true">{% include "_gembok.html" %}</span>
-    <div>
-      <h3 id="pgJudul">Lanjut baca perlu akun</h3>
-      <p>Di tiap novel, <b>bab 1–{{ batas_bab }} bebas</b> — mau dibaca berapa kali pun.
-         <b>Bab {{ batas_bab + 1 }}</b> ke atas perlu masuk.</p>
-    </div>
-  </div>
-  <div class="pg-isi">
-    <div class="pg-baris"><b>{{ n.judul|truncate(46, true, '…') }}</b>
-      <span>Bab {{ b.nomor or b.urutan }} sedang dikunci</span></div>
-    <div class="pg-aksi">
-      <a class="tombol tombol-utama pg-lebar" href="/masuk?lanjut={{ (kanon | urlencode) }}">Masuk / Daftar</a>
-      <a class="tombol tombol-abu pg-lebar" href="/novel/{{ n.slug }}">Kembali ke detail</a>
-    </div>
-    {% if bab_awal %}
-    <div class="pg-petunjuk">
-      <span>Masih bebas dibaca:</span>
-      <div class="pg-pil">
-        {% for x in bab_awal %}<a href="/novel/{{ n.slug }}/bab/{{ x.urutan }}">Bab {{ x.urutan }}</a>{% endfor %}
-        <a href="/novel/{{ n.slug }}">Semua bab</a>
-      </div>
-    </div>
-    {% endif %}
-    <button type="button" class="pg-tutup" id="pgTutup">Tutup</button>
-  </div>
-</div>
-{% endif %}
-
-{% endblock %}
 
 {% block isi %}
 
@@ -86,6 +50,27 @@
     {% if g.caption %}<figcaption style="font-size:11px;color:rgba(255,255,255,.4);padding:10px 14px">{{ g.caption }}</figcaption>{% endif %}
   </figure>
   {% endif %}{% endfor %}
+
+  {# ══ AJAKAN LOGIN — menyatu di halaman, di bawah isi bab ══ #}
+  {% if gerbang_dasar %}
+  <div class="kunci">
+    <span class="kunci-ikon" aria-hidden="true">{% include "_gembok.html" %}</span>
+    <h3>Lanjut baca perlu akun</h3>
+    <p>Di tiap novel <b>bab 1–{{ batas_bab }} bebas</b> — mau dibaca berapa kali pun.
+       <b>Bab {{ batas_bab + 1 }}</b> ke atas perlu masuk, jadi bab ini disamarkan.</p>
+    <div class="kunci-tombol">
+      <a class="tombol tombol-utama" href="/masuk?lanjut={{ (kanon | urlencode) }}">Masuk / Daftar</a>
+      <a class="tombol tombol-abu" href="/novel/{{ n.slug }}">Kembali</a>
+    </div>
+    {% if bab_awal %}
+    <div class="kunci-pil">
+      <span>Masih bebas:</span>
+      {% for x in bab_awal %}<a href="/novel/{{ n.slug }}/bab/{{ x.urutan }}">Bab {{ x.urutan }}</a>{% endfor %}
+      <a href="/novel/{{ n.slug }}">Semua bab</a>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
 
   {# ── navigasi ── #}
   <div class="baca-navigasi">
