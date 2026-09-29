@@ -26,10 +26,12 @@
 
 /* ── dasar ── */
 * { box-sizing: border-box; }
-html { background: var(--bg); overflow-x: hidden; }
-/* ⚠️ PELAJARAN 29 Sep: halaman PUNYA scroll horizontal karena .hero-item
+html { background: var(--bg); }
+/* ⚠️ PELAJARAN 29 Sep: halaman punya scroll horizontal karena .hero-item
    (margin 0 -10px) & .hero-track (padding 8px 6%) lebih lebar dari layar
-   → semua section jadi kelihatan "geser" + ada gap kanan. Dikunci di sini. */
+   → semua section kelihatan "geser" + gap kanan.
+   ⚠️ JANGAN taruh overflow-x:hidden di <html> → SCROLL VERTIKAL HP MACET!
+   Cukup di <body> (aman & tetap mematikan geser horizontal). */
 body { overflow-x: hidden; }
 body {
   margin: 0; background: var(--bg) !important; color: var(--putih);
