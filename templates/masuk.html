@@ -1,7 +1,9 @@
 {% extends "base.html" %}
-{% block judul %}Masuk · {{ nama }}
-{# ⚠️ /fb.js WAJIB dimuat SEBELUM auth-web.js — keduanya tanpa defer
-   supaya window.FB_KONFIG sudah terisi saat auth-web.js jalan #}
+{% block judul %}Masuk · {{ nama }}{% endblock %}
+
+{# ⚠️ WAJIB di LUAR <title> — kalau di dalam <title> browser MENGABAIKAN skrip!
+   /fb.js HARUS dimuat SEBELUM auth-web.js supaya window.FB_KONFIG sudah terisi #}
+{% block kepala %}
 <script src="/fb.js?v={{ versi_aset() }}"></script>
 <script src="/static/auth-web.js?v={{ versi_aset() }}" defer></script>
 {% endblock %}

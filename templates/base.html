@@ -20,6 +20,7 @@
 {# versi CSS ikut mtime berkas → CF & browser otomatis ambil yang baru #}
 <link rel="stylesheet" href="/static/miruro.css?v={{ versi_aset() }}">
 <script src="/static/web.js?v={{ versi_aset() }}" defer></script>
+{% block kepala %}{% endblock %}
 </head>
 <body>
 <header class="kepala">
