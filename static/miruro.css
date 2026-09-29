@@ -981,3 +981,14 @@ body.ada-kunci{
   width:15px; height:15px; line-height:15px; text-align:center; vertical-align:middle; }
 .bab-item.bab-sudah .bab-judul{ color:#8CA0B4; }
 .bab-item.bab-sudah .bab-no{ color:#7E93A7; }
+
+/* ══ LOGO GAMBAR (ikon saja) ══ */
+.logo-gambar{ display:inline-flex; align-items:center; text-decoration:none; line-height:0; }
+.logo-img{ height:30px; width:auto; display:block; }
+.logo-kecil .logo-img{ height:24px; }
+.kaki-logo{ display:inline-block; margin-bottom:8px; }
+.kaki-logo .logo-img{ height:32px; }
+@media (max-width:560px){
+  .logo-img{ height:26px; }
+  .kaki-logo .logo-img{ height:28px; }
+}
