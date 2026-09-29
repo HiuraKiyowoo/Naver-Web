@@ -95,6 +95,11 @@
 
 {# ── MINGGU INI: section BARU sorotan 3 cover ── #}
 {% include "_minggu.html" %}
+{# ── Tag Populer (pil) ── #}
+{% if tag %}
+<section class="bagian">
+  <div class="bagian-kepala">
+    <a class="bagian-kiri" href="/jelajah">
       <h2>Tag Populer</h2>
       <span class="bagian-sub">Kata kunci terbanyak</span>
     </a>
@@ -106,16 +111,11 @@
   </div>
 </section>
 {% endif %}
-
-{# ── Baru Dibuka (rak) ── #}
 {{ bagian('Web Novel', 'Novel web dari sumber online', '/jelajah?tipe=web', 'r9', webnovel, 'status') }}
 {{ bagian('Light Novel', 'Novel terbitan berilustrasi', '/jelajah?tipe=light', 'r10', light, 'status') }}
 
-{# ── Tag Populer (pil) ── #}
-{% if tag %}
-<section class="bagian">
-  <div class="bagian-kepala">
-    <a class="bagian-kiri" href="/jelajah">
+
+{# ── Baru Dibuka (rak) ── #}
 {{ bagian('Baru Dibuka', 'Baru mulai dibaca', '/jelajah?order=baru', 'r7', dibuka, 'status') }}
 
 </div>
