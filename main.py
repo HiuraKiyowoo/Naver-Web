@@ -139,12 +139,17 @@ def beranda(request: Request):
     #  Jejak data dB: rating terisi 347/496 · bookmark>0 345/496 ·
     #  tipe light 149 / web 320 · status complete 207 / ongoing 289.
     # ═══════════════════════════════════════════════════════════════════
-    # PALING PANJANG — jumlah_bab nyata (469 novel bercover, semua punya bab).
-    # (Dulu bernama "Sedang Populer" padahal populer butuh bookmark, dan
-    #  151 novel bookmark-nya 0 → urutannya tidak bisa dipercaya.)
-    panjang = [kartu(r) for r in ambil(
+    # PALING PANJANG — DIHAPUS atas permintaan user 29 Sep ("gajelas").
+    # BERILUSTRASI — DIHAPUS juga atas permintaan user. Diganti:
+    # DARI JEPANG (250 novel) & DARI KOREA (138) — asal negara nyata dari dB.
+    jepang = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "ORDER BY jumlah_bab DESC LIMIT 12")]
+        "AND LOWER(COALESCE(country,'')) LIKE '%jepang%' "
+        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
+    korea = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "AND LOWER(COALESCE(country,'')) LIKE '%korea%' "
+        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
     # RANDOM: tetap sama tiap hari (seed tanggal) supaya tidak berkedip saat reload
     seed = int(time.strftime("%Y%m%d"))
     acak = [kartu(r) for r in ambil(
@@ -199,31 +204,13 @@ def beranda(request: Request):
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
         "AND COALESCE(rating,0) >= 4.2 "
         "ORDER BY rating DESC, jumlah_bab DESC LIMIT 12")]
-    # BERILUSTRASI — 230 novel punya bab_gambar (ini pembeda kita, bukan
-    # section karangan: dihitung dari tabel bab_gambar).
-    berilustrasi = [kartu(r) for r in ambil("""
-        SELECT DISTINCT n.* FROM novel n
-        JOIN bab b ON b.novel_id = n.id
-        JOIN bab_gambar g ON g.bab_id = b.id
-        WHERE n.cover_webp IS NOT NULL AND n.judul != ''
-        ORDER BY n.jumlah_bab DESC LIMIT 12""")]
-    # LIGHT NOVEL — tipe nyata dari dB (149 novel).
-    light = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND LOWER(COALESCE(tipe,'')) LIKE '%light%' "
-        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
-    # WEB NOVEL — tipe nyata dari dB (320 novel).
-    webnovel = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND LOWER(COALESCE(tipe,'')) LIKE '%web%' "
-        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
     return tpl.TemplateResponse(request, "beranda.html", {
         "situs": SITUS, "halaman": "beranda", "nama": NAMA, "desk": DESK,
         "kanon": str(request.url), "total_novel": n, "total_bab": b,
-        "hero": hero, "panjang": panjang, "acak": acak, "baru": baru,
+        "hero": hero, "acak": acak, "baru": baru,
         "update": update, "tamat": tamat, "ongoing": ongoing,
         "genre": genre, "tag": tag, "premium": premium,
-        "berilustrasi": berilustrasi, "light": light, "webnovel": webnovel,
+        "jepang": jepang, "korea": korea,
     })
 
 
@@ -309,8 +296,8 @@ def bab(request: Request, slug: str, urutan: int):
 @app.get("/jelajah", response_class=HTMLResponse)
 def jelajah(request: Request,
             q: str = "", status: str = "", tipe: str = "",
-            genre: str = "", tag: str = "", order: str = "populer",
-            page: int = 1, per: int = 24):
+            genre: str = "", tag: str = "", negara: str = "",
+            order: str = "populer", page: int = 1, per: int = 24):
     where, par = ["n.cover_webp IS NOT NULL"], []
     if q:
         where.append("(n.judul LIKE ? OR COALESCE(n.penulis, n.author) LIKE ?)")
@@ -327,6 +314,10 @@ def jelajah(request: Request,
         where.append("n.id IN (SELECT nt.novel_id FROM novel_tag nt "
                      "JOIN tag t ON t.id=nt.tag_id WHERE t.slug=?)")
         par.append(tag)
+    # negara (dipakai section "Dari Jepang"/"Dari Korea" di beranda)
+    if negara:
+        where.append("LOWER(COALESCE(n.country,'')) LIKE ?")
+        par.append(f"%{negara.lower()}%")
     # ⚠️ "populer" TETAP ada (bookmark) tapi tidak dipakai di beranda karena
     #    151/496 novel bookmark-nya 0 → urutannya tidak jujur. Sekarang beranda
     #    pakai "panjang" (jumlah_bab nyata) & "update" (bab.tanggal terbaru).
@@ -358,6 +349,7 @@ def jelajah(request: Request,
         "kanon": f"{SITUS}/jelajah",
         "hasil": [kartu(x) for x in baris], "total": total,
         "q": q, "status": status, "tipe": tipe, "genre": genre, "tag": tag,
+        "negara": negara,
         "order": order, "page": page, "per": per,
         "total_hal": (total + per - 1) // per,
         "genre_list": g_list, "tag_list": t_list,
@@ -556,6 +548,36 @@ def apk(request: Request):
         "kanon": f"{SITUS}/apk",
         "apk_url": "/static/naver.apk" if apk.exists() else None,
         "total_novel": n, "total_bab": b,
+    })
+
+
+# ═════════════════════════════════════════════════════════════
+#  HALAMAN: PUSTAKA & PROFIL (nav bawah)
+#  ⚠️ BELUM ada sistem login — jadi halaman ini JUJUR menjelaskan
+#     keadaannya, BUKAN pura-pura punya data pengguna.
+#     (Rencana login ada di CATATAN/nanti-kerjaan-tertunda.md)
+# ═════════════════════════════════════════════════════════════
+@app.get("/pustaka", response_class=HTMLResponse)
+def pustaka(request: Request):
+    n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
+    b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
+    g = ambil("SELECT COUNT(*) c FROM bab_gambar", satu=True)["c"]
+    return tpl.TemplateResponse(request, "pustaka.html", {
+        "situs": SITUS, "halaman": "pustaka", "nama": NAMA,
+        "judul": f"Pustaka: {NAMA}",
+        "desk": "Koleksi pribadi dan riwayat baca (menunggu sistem login).",
+        "kanon": f"{SITUS}/pustaka",
+        "total_novel": n, "total_bab": b, "total_gambar": g,
+    })
+
+
+@app.get("/profil", response_class=HTMLResponse)
+def profil(request: Request):
+    return tpl.TemplateResponse(request, "profil.html", {
+        "situs": SITUS, "halaman": "profil", "nama": NAMA,
+        "judul": f"Profil: {NAMA}",
+        "desk": "Akun dan pengaturan (menunggu sistem login).",
+        "kanon": f"{SITUS}/profil",
     })
 
 

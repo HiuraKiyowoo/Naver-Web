@@ -54,15 +54,13 @@
 {% endif %}
 {% endmacro %}
 
-{{ bagian('Paling Panjang', 'Jumlah bab terbanyak di arsip', '/jelajah?order=panjang', 'r1', panjang, 'bab') }}
 {{ bagian('Update Terbaru', 'Bab paling baru masuk', '/jelajah?order=update', 'r4', update, 'bab') }}
 {{ bagian('Rating Tertinggi', 'Nilai 4.2 ke atas dari pembaca', '/jelajah?order=rating', 'r2', premium, 'rating') }}
 {{ bagian('Baru Ditambahkan', 'Terakhir masuk arsip', '/jelajah?order=baru', 'r3', baru, 'status') }}
-{{ bagian('Bergambar', 'Novel dengan ilustrasi di dalamnya', '/jelajah?order=ilustrasi', 'r8', berilustrasi, 'bab') }}
 {{ bagian('Masih Jalan', 'Belum tamat, masih berlanjut', '/jelajah?status=ongoing', 'r5b', ongoing, 'status') }}
 {{ bagian('Sudah Tamat', 'Lengkap sampai akhir', '/jelajah?status=completed', 'r5', tamat, 'status') }}
-{{ bagian('Web Novel', 'Novel web dari sumber online', '/jelajah?tipe=web', 'r9', webnovel, 'status') }}
-{{ bagian('Light Novel', 'Novel terbitan dengan ilustrasi', '/jelajah?tipe=light', 'r10', light, 'status') }}
+{{ bagian('Dari Jepang', 'Novel asal Jepang', '/jelajah?negara=jepang', 'r11', jepang, 'status') }}
+{{ bagian('Dari Korea', 'Novel asal Korea', '/jelajah?negara=korea', 'r12', korea, 'status') }}
 {{ bagian('Jelajahi Acak', 'Pilihan acak hari ini', '/jelajah?order=acak', 'r6', acak, 'rating') }}
 
 {# ── Telusuri Genre (pil) ── #}

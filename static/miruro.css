@@ -5,18 +5,22 @@
    ═══════════════════════════════════════════════════════════════════════ */
 
 :root {
-  --bg: #0a0a0c;          /* latar (persis Miruro) */
-  --panel: #16161a;       /* panel/kartu (persis Miruro) */
-  --panel2: #101014;
-  --garis: rgba(255, 255, 255, .07);
-  --putih: #fff;
-  --redup: rgba(255, 255, 255, .60);
-  --samar: rgba(255, 255, 255, .32);
-  --emas: #F6CF80;        /* aksen utama Miruro */
-  --emas2: #ebd59b;
-  --pink: #F472B6;
-  --cyan: #049DFD;        /* aksen Naver (dipakai hemat) */
-  --oranye: #ff7f00;
+  /* ═══ CHARCOAL (arang) + CYAN ═══ aturan user 29 Sep ═══ */
+  --bg: #12151A;          /* latar charcoal */
+  --panel: #1A1F26;       /* panel/kartu */
+  --panel2: #232A33;      /* panel naik (hover/aktif) */
+  --garis: rgba(160, 200, 240, .10);
+  --putih: #F2F7FC;
+  --redup: rgba(214, 231, 245, .62);
+  --samar: rgba(180, 205, 228, .38);
+  /* aksen cyan (palet utama) */
+  --cyan: #049DFD;
+  --cyan2: #38BDF8;
+  --cyan3: #0B7DC4;
+  --emas: #38BDF8;        /* aksen "aktif" kini CYAN (dulu emas) */
+  --emas2: #7DD3FC;
+  --pink: #049DFD;
+  --oranye: #049DFD;
   --r: 8px;
 }
 
@@ -74,7 +78,7 @@ img { display: block; }
 .hero-track::-webkit-scrollbar { display: none; }
 .hero-item {
   flex: 0 0 88%; max-width: 860px; margin: 0 -10px; scroll-snap-align: center;
-  aspect-ratio: 16/9; position: relative; overflow: hidden; background: #0d0d10;
+  aspect-ratio: 16/9; position: relative; overflow: hidden; background: var(--panel2);
   border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.5);
   transition: transform .4s cubic-bezier(.25,1,.5,1), opacity .4s;
   transform: scale(.88); opacity: .45; z-index: 1;
@@ -104,7 +108,7 @@ img { display: block; }
 .hero-titik span { height: 6px; width: 6px; border-radius: 999px;
   background: rgba(255,255,255,.25); transition: all .3s; }
 .hero-titik span.on { width: 24px; background: var(--pink);
-  box-shadow: 0 0 10px rgba(244,114,182,.7); }
+  box-shadow: 0 0 10px rgba(4,157,253,.7); }
 
 /* ── bagian ── */
 .bagian { margin-top: 44px; }
@@ -190,7 +194,7 @@ img { display: block; }
 .kotak4 a { display: flex; flex-direction: column; align-items: center; gap: 6px;
   background: var(--panel); border: 1px solid rgba(255,255,255,.05);
   padding: 12px; border-radius: 8px; transition: all .18s; }
-.kotak4 a:hover { border-color: rgba(246,207,128,.4); background: rgba(246,207,128,.05); }
+.kotak4 a:hover { border-color: rgba(4,157,253,.4); background: rgba(4,157,253,.06); }
 .kotak4 i { font-size: 17px; color: rgba(255,255,255,.3); font-style: normal; }
 .kotak4 a:hover i { color: var(--emas); }
 .kotak4 span { font-size: 9px; font-weight: 900; text-transform: uppercase;
@@ -226,8 +230,8 @@ img { display: block; }
 .lc-tipe { background: var(--emas); color: #000; }
 .lc-status { background: rgba(255,255,255,.1); color: rgba(255,255,255,.8);
   border: 1px solid rgba(255,255,255,.06); }
-.lc-rating { background: rgba(251,191,36,.1); color: #fbbf24;
-  border: 1px solid rgba(251,191,36,.2); }
+.lc-rating { background: rgba(56,189,248,.10); color: var(--cyan2);
+  border: 1px solid rgba(56,189,248,.24); }
 .lc-abu { background: rgba(255,255,255,.05); color: var(--redup);
   border: 1px solid rgba(255,255,255,.06); }
 .detail-kotak { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -271,8 +275,8 @@ img { display: block; }
   gap: 10px; padding: 12px 16px; border-radius: 4px; background: var(--bg);
   border: 1px solid rgba(255,255,255,.05); transition: all .15s; }
 .bab-item:hover { border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.05); }
-.bab-item.terakhir { background: rgba(246,207,128,.1);
-  border-color: rgba(246,207,128,.3); }
+.bab-item.terakhir { background: rgba(4,157,253,.10);
+  border-color: rgba(4,157,253,.32); }
 .bab-kiri { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .bab-no { font-size: 13px; font-weight: 900; color: rgba(255,255,255,.8);
   flex: 0 0 auto; }
@@ -353,9 +357,9 @@ img { display: block; }
 .notch-ikon { width: 44px; height: 44px; border-radius: 16px; display: grid;
   place-items: center; color: rgba(255,255,255,.5); font-size: 18px;
   transition: all .5s cubic-bezier(.34,1.56,.64,1); margin-bottom: 2px; }
-.notch-nav a[aria-current] .notch-ikon { background: var(--emas); color: #0a0a0c;
+.notch-nav a[aria-current] .notch-ikon { background: var(--emas); color: #0A0E13;
   transform: translateY(-16px) scale(1.08); border-radius: 18px;
-  box-shadow: 0 8px 24px rgba(246,207,128,.35); }
+  box-shadow: 0 8px 24px rgba(4,157,253,.38); }
 .notch-label { font-size: 9px; font-weight: 900; color: var(--samar);
   opacity: 0; transform: translateY(6px); transition: all .3s;
   position: absolute; bottom: 8px; }

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block judul %}Pustaka: {{ nama }}{% endblock %}
+
+{% block isi %}
+<div class="wadah" style="padding-top:110px">
+
+  <div class="judul-hal" style="padding:0">
+    <div>
+      <h1>Pustaka</h1>
+      <p>Koleksi pribadi & riwayat baca</p>
+    </div>
+  </div>
+
+  <div class="panel" style="text-align:center;padding:48px 24px">
+    <b style="display:block;font-size:44px;color:var(--cyan);line-height:1;letter-spacing:-.04em">▤</b>
+    <b style="display:block;margin:16px 0 8px;font-size:17px;font-weight:900">Belum ada akun</b>
+    <span class="redup" style="display:block;font-size:12.5px;line-height:1.75;max-width:420px;margin:0 auto">
+      Pustaka menyimpan novel favorit, riwayat baca, dan posisi bab terakhir.
+      Fitur ini baru bisa jalan setelah <b style="color:var(--cyan)">sistem login</b> dibuat —
+      dan itu belum jadi.
+    </span>
+    <div class="detail-aksi" style="justify-content:center;margin-top:26px">
+      <a class="tombol tombol-utama" href="/jelajah">Jelajah Novel</a>
+      <a class="tombol tombol-abu" href="/">Ke Beranda</a>
+    </div>
+  </div>
+
+  <section class="bagian">
+    <div class="bagian-kepala">
+      <div class="bagian-kiri"><h2>Isi Arsip Sekarang</h2><span class="bagian-sub">Yang sudah tersimpan di server</span></div>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">
+      {% for f in [('Novel', total_novel), ('Bab', total_bab), ('Ilustrasi', total_gambar)] %}
+      <div class="panel" style="margin:0;text-align:center">
+        <b style="display:block;font-size:26px;font-weight:900;color:var(--cyan);letter-spacing:-.02em">
+          {{ '{:,}'.format(f[1]).replace(',', '.') }}
+        </b>
+        <span class="bagian-sub" style="margin-top:6px">{{ f[0] }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
