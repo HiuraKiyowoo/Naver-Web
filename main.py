@@ -127,37 +127,46 @@ def ambil(q, par=(), satu=False):
 def beranda(request: Request):
     n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
     b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
-    # HERO: novel rating tertinggi (rating 0 dilewati — 148 novel ratingnya 0)
+    # HERO: novel rating tertinggi — SEMUA sudah berating (rating >= 4.0).
+    # ⚠️ 148 novel ratingnya 0 → kalau tidak disaring, hero bisa jadi kosong.
     hero = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND COALESCE(rating,0) >= 1 "
-        "ORDER BY rating DESC, bookmark DESC LIMIT 5")]
-    # TRENDING: paling banyak di-bookmark
-    trending = [kartu(r) for r in ambil(
+        "AND COALESCE(rating,0) > 0 "
+        "ORDER BY rating DESC, COALESCE(bookmark,0) DESC LIMIT 5")]
+    # ═══════════════════════════════════════════════════════════════════
+    #  ISI SECTION — HARUS JUJUR (aturan user 29 Sep: "isi dengan jujur
+    #  sesuai api kita"). Tiap judul di bawah WAJIB dibuktikan query-nya.
+    #  Jejak data dB: rating terisi 347/496 · bookmark>0 345/496 ·
+    #  tipe light 149 / web 320 · status complete 207 / ongoing 289.
+    # ═══════════════════════════════════════════════════════════════════
+    # PALING PANJANG — jumlah_bab nyata (469 novel bercover, semua punya bab).
+    # (Dulu bernama "Sedang Populer" padahal populer butuh bookmark, dan
+    #  151 novel bookmark-nya 0 → urutannya tidak bisa dipercaya.)
+    panjang = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "ORDER BY COALESCE(bookmark,0) DESC LIMIT 10")]
+        "ORDER BY jumlah_bab DESC LIMIT 12")]
     # RANDOM: tetap sama tiap hari (seed tanggal) supaya tidak berkedip saat reload
     seed = int(time.strftime("%Y%m%d"))
     acak = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "ORDER BY (id * ?) % 10007 LIMIT 10", (seed,))]
-    # BARU DI TAMBAH: created_at terbaru (TERISI SEMUA, tidak seperti waktu_update)
+        "ORDER BY (id * ?) % 10007 LIMIT 12", (seed,))]
+    # BARU DITAMBAH: created_at terbaru (TERISI SEMUA 496/496, tidak seperti
+    # waktu_update yang cuma 17/496 → itu sebabnya dulu tidak dipakai).
     baru = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "ORDER BY created_at DESC LIMIT 10")]
-    # LATEST UPDATE: pakai bab.tanggal (waktu_update KOSONG di 478/495 novel).
-    # ⚠️ JANGAN "GROUP BY n.id + MAX()" → 12 dtk (pindai 111.680 bab).
-    #    Dan ⚠️ JANGAN ambil cuma 60 bab terbaru: 110 bab terakhir bisa dari
-    #    SATU novel saja (mis. n1987 tanggal 27 Sep) → hasil cuma 1 novel.
-    #    Ambil 400 bab (kena index idx_bab_tanggal, tetap ~0,01 dtk), lalu
-    #    ambil novel unik sampai dapat 10.
+        "ORDER BY created_at DESC, id DESC LIMIT 12")]
+    # UPDATE TERBARU: pakai bab.tanggal (waktu_update KOSONG di 479/496 novel).
+    # ⚠️ JANGAN "GROUP BY n.id + MAX()" → 12 dtk (pindai 111.689 bab).
+    # ⚠️ JANGAN cuma 400 bab: 400 bab terakhir cuma dari 7 NOVEL (satu novel
+    #    bisa 110 bab berurutan) → section isinya nyaris 1 novel.
+    #    JUJUR = ambil 6.000 bab (kena index idx_bab_tanggal) → 58 novel unik.
     update, sudah = [], set()
     for r in ambil("""
         SELECT b.tanggal AS tg, n.*
         FROM bab b JOIN novel n ON n.id = b.novel_id
         WHERE b.tanggal IS NOT NULL AND b.tanggal != ''
           AND n.cover_webp IS NOT NULL AND n.judul != ''
-        ORDER BY b.tanggal DESC LIMIT 400"""):
+        ORDER BY b.tanggal DESC LIMIT 6000"""):
         if r["id"] in sudah:
             continue
         sudah.add(r["id"])
@@ -165,38 +174,56 @@ def beranda(request: Request):
         k["tanggal"] = (r["tg"] or "")[:10]
         k["c_bab"] = r["jumlah_bab"]
         update.append(k)
-        if len(update) >= 10:
+        if len(update) >= 12:
             break
-    # TAMAT: status Completed
+    # TAMAT: status Completed (207 novel — judul jujur).
     tamat = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
         "AND LOWER(COALESCE(status,'')) LIKE '%complete%' "
-        "ORDER BY COALESCE(rating,0) DESC, COALESCE(bookmark,0) DESC LIMIT 10")]
+        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
+    # MASIH JALAN: status Ongoing (289 novel) — dulu ada tapi tidak dipakai.
     ongoing = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
         "AND LOWER(COALESCE(status,'')) LIKE '%ongoing%' "
-        "ORDER BY COALESCE(bookmark,0) DESC LIMIT 10")]
+        "ORDER BY COALESCE(rating,0) DESC, COALESCE(bookmark,0) DESC LIMIT 12")]
     genre = [dict(r) for r in ambil("""
         SELECT g.slug, g.nama, COUNT(ng.novel_id) jumlah FROM genre g
         JOIN novel_genre ng ON ng.genre_id = g.id
         GROUP BY g.id ORDER BY jumlah DESC LIMIT 18""")]
     tag = [dict(r) for r in ambil(
         "SELECT slug, nama, jumlah_novel FROM tag ORDER BY jumlah_novel DESC LIMIT 24")]
-    # RATING TERTINGGI (padanan "Premium Originals" novelpia) — rating >= 4.5
+    # RATING TERTINGGI — ambang 4.2 (112 novel, SEMUA benar-benar berating).
+    # Dulu ambang 4.5 → cuma 43 novel, dan daftarnya bercampur novel rating 0
+    # yang ikut terurut di bawah → tidak jujur.
     premium = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND COALESCE(rating,0) >= 4.5 "
-        "ORDER BY rating DESC, COALESCE(bookmark,0) DESC LIMIT 12")]
-    # BARU DIBUKA (padanan "Recently Opened") — id terbaru
-    dibuka = [kartu(r) for r in ambil(
+        "AND COALESCE(rating,0) >= 4.2 "
+        "ORDER BY rating DESC, jumlah_bab DESC LIMIT 12")]
+    # BERILUSTRASI — 230 novel punya bab_gambar (ini pembeda kita, bukan
+    # section karangan: dihitung dari tabel bab_gambar).
+    berilustrasi = [kartu(r) for r in ambil("""
+        SELECT DISTINCT n.* FROM novel n
+        JOIN bab b ON b.novel_id = n.id
+        JOIN bab_gambar g ON g.bab_id = b.id
+        WHERE n.cover_webp IS NOT NULL AND n.judul != ''
+        ORDER BY n.jumlah_bab DESC LIMIT 12""")]
+    # LIGHT NOVEL — tipe nyata dari dB (149 novel).
+    light = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "ORDER BY id DESC LIMIT 12")]
+        "AND LOWER(COALESCE(tipe,'')) LIKE '%light%' "
+        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
+    # WEB NOVEL — tipe nyata dari dB (320 novel).
+    webnovel = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "AND LOWER(COALESCE(tipe,'')) LIKE '%web%' "
+        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
     return tpl.TemplateResponse(request, "beranda.html", {
         "situs": SITUS, "halaman": "beranda", "nama": NAMA, "desk": DESK,
         "kanon": str(request.url), "total_novel": n, "total_bab": b,
-        "hero": hero, "trending": trending, "acak": acak, "baru": baru,
+        "hero": hero, "panjang": panjang, "acak": acak, "baru": baru,
         "update": update, "tamat": tamat, "ongoing": ongoing,
-        "genre": genre, "tag": tag, "premium": premium, "dibuka": dibuka,
+        "genre": genre, "tag": tag, "premium": premium,
+        "berilustrasi": berilustrasi, "light": light, "webnovel": webnovel,
     })
 
 
@@ -300,9 +327,21 @@ def jelajah(request: Request,
         where.append("n.id IN (SELECT nt.novel_id FROM novel_tag nt "
                      "JOIN tag t ON t.id=nt.tag_id WHERE t.slug=?)")
         par.append(tag)
-    urut = {"populer": "n.jumlah_bab DESC", "baru": "COALESCE(n.waktu_update,n.created_at) DESC",
+    # ⚠️ "populer" TETAP ada (bookmark) tapi tidak dipakai di beranda karena
+    #    151/496 novel bookmark-nya 0 → urutannya tidak jujur. Sekarang beranda
+    #    pakai "panjang" (jumlah_bab nyata) & "update" (bab.tanggal terbaru).
+    urut = {"populer": "COALESCE(n.bookmark,0) DESC, n.jumlah_bab DESC",
+            "panjang": "n.jumlah_bab DESC",
+            "update": "COALESCE(n.waktu_update,n.created_at) DESC",
             "judul": "n.judul COLLATE NOCASE ASC", "rating": "n.rating DESC"}\
         .get(order, "n.jumlah_bab DESC")
+    # "ilustrasi": hanya novel yang benar-benar punya baris di bab_gambar.
+    if order == "ilustrasi":
+        where.append("n.id IN (SELECT n2.id FROM novel n2 "
+                     "JOIN bab b2 ON b2.novel_id=n2.id "
+                     "JOIN bab_gambar g2 ON g2.bab_id=b2.id)")
+    if order == "acak":
+        urut = f"(n.id * {int(time.strftime('%Y%m%d'))}) % 10007 ASC"
     W = " WHERE " + " AND ".join(where)
     total = ambil(f"SELECT COUNT(*) c FROM novel n{W}", tuple(par), satu=True)["c"]
     baris = ambil(f"SELECT n.* FROM novel n{W} ORDER BY {urut} LIMIT ? OFFSET ?",

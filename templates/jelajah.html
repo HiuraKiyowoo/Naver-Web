@@ -44,6 +44,15 @@
     <a href="/jelajah?tipe=web&order={{ order }}{% if status %}&status={{ status }}{% endif %}{% if q %}&q={{ q }}{% endif %}"{% if tipe=='web' %} class="aktif"{% endif %}>Web Novel</a>
   </div>
 
+  {# ── saring khusus (nyambung dari beranda) ── #}
+  <div class="saring" style="margin-bottom:22px">
+    <span class="saring-label">Khusus</span>
+    <a href="/jelajah?order=panjang">Paling Panjang</a>
+    <a href="/jelajah?order=rating">Rating Tertinggi</a>
+    <a href="/jelajah?order=ilustrasi">Bergambar</a>
+    <a href="/jelajah?order=acak">Acak</a>
+  </div>
+
   {% if hasil %}
   <div class="grid">
     {% for n in hasil %}{% include "_kartu.html" %}{% endfor %}
