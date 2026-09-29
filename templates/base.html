@@ -23,12 +23,38 @@
 <header class="kepala">
   <div class="kepala-dalam">
     <a class="logo" href="/">{{ nama }}</a>
-    <nav class="nav-atas">
-      <a href="/jelajah">Jelajah</a>
-      <a href="/pustaka">Pustaka</a>
-    </nav>
+    <button class="hamburger" id="btnLaci" aria-label="Buka menu" aria-expanded="false" aria-controls="laci">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </header>
+
+{# ── LACI SAMPING (semua menu) ── #}
+<div class="laci-tirai" id="laciTirai" hidden></div>
+<aside class="laci" id="laci" aria-label="Menu utama" aria-hidden="true">
+  <div class="laci-kepala">
+    <b class="logo">{{ nama }}</b>
+    <button class="laci-tutup" id="btnLaciTutup" aria-label="Tutup menu">&times;</button>
+  </div>
+  <nav class="laci-nav">
+    <a href="/"{% if halaman == 'beranda' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">⌂</span> Home</a>
+    <a href="/jelajah"{% if halaman in ('jelajah','daftar') %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">◎</span> Jelajah</a>
+    <a href="/pustaka"{% if halaman == 'pustaka' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">▤</span> Pustaka</a>
+    <a href="/profil"{% if halaman == 'profil' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">☺</span> Profil</a>
+    <div class="laci-pisah"></div>
+    <a href="/cari"{% if halaman == 'cari' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">⌕</span> Cari</a>
+    <a href="/jelajah"{% if halaman == 'genre' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">◈</span> Telusuri Genre</a>
+    <a href="/jelajah"{% if halaman == 'tag' %} aria-current="page"{% endif %}><span class="laci-ikon" aria-hidden="true">#</span> Tag Populer</a>
+    <a href="/jelajah?order=rating"><span class="laci-ikon" aria-hidden="true">★</span> Rating Tertinggi</a>
+    <a href="/jelajah?order=baru"><span class="laci-ikon" aria-hidden="true">✦</span> Baru Ditambahkan</a>
+    <a href="/jelajah?status=Completed"><span class="laci-ikon" aria-hidden="true">✔</span> Sudah Tamat</a>
+    <div class="laci-pisah"></div>
+    <a href="/apk"><span class="laci-ikon" aria-hidden="true">▣</span> APK Android</a>
+    <a href="/status"><span class="laci-ikon" aria-hidden="true">⚙</span> Status Server</a>
+  </nav>
+  <div class="laci-kaki">Arsip pribadi · {{ total_novel|default('') }} novel</div>
+</aside>
+
 
 {% block isi %}{% endblock %}
 
@@ -51,19 +77,5 @@
   <div class="kaki-bawah">© {{ nama }} · {{ total_novel|default('') }} novel · {{ total_bab|default('') }} bab</div>
 </footer>
 
-<nav class="notch-nav" aria-label="Navigasi bawah">
-  <a href="/"{% if halaman == 'beranda' %} aria-current="page"{% endif %}>
-    <span class="notch-ikon" aria-hidden="true">⌂</span><span class="notch-label">Home</span>
-  </a>
-  <a href="/jelajah"{% if halaman in ('jelajah','genre','tag','daftar','cari') %} aria-current="page"{% endif %}>
-    <span class="notch-ikon" aria-hidden="true">◎</span><span class="notch-label">Jelajah</span>
-  </a>
-  <a href="/pustaka"{% if halaman == 'pustaka' %} aria-current="page"{% endif %}>
-    <span class="notch-ikon" aria-hidden="true">▤</span><span class="notch-label">Pustaka</span>
-  </a>
-  <a href="/profil"{% if halaman == 'profil' %} aria-current="page"{% endif %}>
-    <span class="notch-ikon" aria-hidden="true">☺</span><span class="notch-label">Profil</span>
-  </a>
-</nav>
 </body>
 </html>
