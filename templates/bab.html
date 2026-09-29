@@ -24,7 +24,7 @@
   </div>
 
   {# ── ilustrasi pembuka ── #}
-  {% for g in gambar %}{% if g.urutan <= 2 %}
+  {% for g in gambar %}{% if g.urutan <= 2 and not gerbang_dasar %}
   <figure class="baca-illust">
     <img src="{{ g.sumber }}" alt="{{ g.caption or 'Ilustrasi' }}" loading="lazy">
     {% if g.caption %}<figcaption style="font-size:11px;color:rgba(255,255,255,.4);padding:10px 14px">{{ g.caption }}</figcaption>{% endif %}
@@ -44,7 +44,7 @@
   {% endif %}
 
   {# ── ilustrasi sisanya ── #}
-  {% for g in gambar %}{% if g.urutan > 2 %}
+  {% for g in gambar %}{% if g.urutan > 2 and not gerbang_dasar %}
   <figure class="baca-illust">
     <img src="{{ g.sumber }}" alt="{{ g.caption or 'Ilustrasi' }}" loading="lazy">
     {% if g.caption %}<figcaption style="font-size:11px;color:rgba(255,255,255,.4);padding:10px 14px">{{ g.caption }}</figcaption>{% endif %}
@@ -72,7 +72,8 @@
   </div>
   {% endif %}
 
-  {# ── navigasi ── #}
+  {# ── navigasi (disembunyikan saat terkunci) ── #}
+  {% if not gerbang_dasar %}
   <div class="baca-navigasi">
     {% if sebelum %}
     <a href="/novel/{{ n.slug }}/bab/{{ sebelum }}">← Sebelumnya</a>
@@ -99,5 +100,6 @@
       {% endfor %}
     </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}
