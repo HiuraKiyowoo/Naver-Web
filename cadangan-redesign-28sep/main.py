@@ -20,21 +20,11 @@ import json
 import os
 import re
 import sqlite3
-import secrets
-
-# ⚠️ muat kunci Firebase dari ENV berkas (TIDAK pernah dicetak)
-try:
-    import muat_env
-    muat_env.muat()
-except Exception:
-    pass
-
-import auth
 import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse, RedirectResponse,
+from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
                                PlainTextResponse, Response)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -44,94 +34,8 @@ ROOT = BASE.parent
 DB = ROOT / "naver.db"
 
 app = FastAPI(title="Naver Web", docs_url=None, redoc_url=None)
-
-
-# ═════════════════════════════════════════════════════════════
-#  AUTH — baca cookie sesi (pengguna) & tamu di setiap permintaan
-# ═════════════════════════════════════════════════════════════
-@app.middleware("http")
-async def _siapkan_pengguna(request: Request, call_next):
-    """Tempelkan request.state.pengguna (kalau login) & .tamu (selalu)."""
-    request.state.pengguna = None
-    request.state.tamu = auth.tamu_sah(request.cookies.get(auth.COOKIE_TAMU))
-    try:
-        tok = request.cookies.get(auth.COOKIE_SESI)
-        if tok:
-            request.state.pengguna = auth.pengguna_dari_sesi(tok)
-    except Exception:
-        request.state.pengguna = None
-    resp = await call_next(request)
-    # pasang cookie TAMU kalau belum ada (httpOnly → tidak bisa dibaca JS)
-    if not request.state.tamu and request.url.path not in ('/static',):
-        baru = auth.tamu_baru()
-        resp.set_cookie(auth.COOKIE_TAMU, auth.bungkus_tamu(baru),
-                        max_age=60 * 60 * 24 * auth.UMUR_TAMU,
-                        httponly=True, samesite='lax', secure=False)
-    return resp
-# ⚠️ BERKAS GAMBAR (cover & ilustrasi) DISAJIKAN LANGSUNG dari disk.
-#    Dulu web TIDAK punya route /cover/* → beranda minta /cover/1987.webp
-#    ke port 8100 → 404 → browser menampilkan ikon "kertas rusak" di
-#    SEMUA kartu. Route ini yang memperbaikinya (tanpa lewat API 8000,
-#    jadi lebih cepat & tidak ikut batas laju API).
-GAMBAR = ROOT / "gambar"
-COVER = ROOT / "cover"
-if GAMBAR.exists():
-    app.mount("/gambar", StaticFiles(directory=str(GAMBAR)), name="gambar")
-if COVER.exists():
-    app.mount("/cover", StaticFiles(directory=str(COVER)), name="cover")
 app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
 tpl = Jinja2Templates(directory=str(BASE / "templates"))
-
-
-@app.middleware("http")
-async def atur_cache(request, call_next):
-    """Berkas /static: cache 1 jam + wajib revalidate.
-
-    Cloudflare sebelumnya menyimpan CSS 4 jam (`max-age=14400`) → tampilan
-    lama bertahan lama. Sekarang 1 jam dan `must-revalidate` supaya berkas
-    yang berubah cepat terpakai. HTML tidak di-cache (selalu segar).
-    """
-    jawab = await call_next(request)
-    if request.url.path.startswith("/static/"):
-        jawab.headers["Cache-Control"] = "public, max-age=3600, must-revalidate"
-    elif jawab.headers.get("content-type", "").startswith("text/html"):
-        jawab.headers["Cache-Control"] = "no-cache"
-    return jawab
-
-
-def _versi_aset() -> str:
-    """Versi aset ikut waktu-ubah berkas CSS/JS.
-
-    Dipakai di base.html sebagai `?v=` supaya browser & Cloudflare TIDAK
-    menyajikan CSS basi (pelajaran 28 Sep: CF cache `max-age=14400` bikin
-    tampilan lama bertahan sampai 4 jam walau berkas sudah diperbarui).
-    """
-    try:
-        t = max((BASE / "static" / n).stat().st_mtime
-                for n in ("miruro.css", "web.css", "web.js")
-                if (BASE / "static" / n).exists())
-        return str(int(t))
-    except Exception:
-        return "1"
-
-
-tpl.env.globals["versi_aset"] = _versi_aset
-
-
-def tipe_lencana(n) -> str:
-    """'LN' / 'WN' / '' — lencana tipe untuk kartu kipas (section Jelajahi Acak).
-
-    Dipakai di _kipas.html. Ambil dari field `tipe` milik dB (web 320 · light 149).
-    """
-    t = (n.get("tipe") or "").lower() if isinstance(n, dict) else ""
-    if "light" in t:
-        return "LN"
-    if "web" in t:
-        return "WN"
-    return ""
-
-
-tpl.env.globals["tipe_lencana"] = tipe_lencana
 
 # ── konfigurasi situs (dipakai di <head> utk SEO) ──
 SITUS = os.environ.get("NAVER_SITUS", "https://navernovel.my.id")
@@ -153,9 +57,6 @@ def kartu(r, dasar="") -> dict:
         "cover": f"/cover/{r['id']}.webp" if r["cover_webp"] else None,
         "jumlah_bab": r["jumlah_bab"], "rating": r["rating"],
         "status": r["status"], "tipe": r["tipe"], "country": r["country"],
-        # bookmark dipakai kartu gaya novelpia ("1.6K pembaca") — 148/495 novel
-        # bookmark-nya 0, jadi kartu wajib cek >0 dulu sebelum menampilkannya.
-        "bookmark": r["bookmark"] if "bookmark" in r.keys() else None,
         "url": f"/novel/{r['slug']}",
     }
 
@@ -177,135 +78,33 @@ def ambil(q, par=(), satu=False):
 def beranda(request: Request):
     n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
     b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
-    # HERO: novel rating tertinggi — SEMUA sudah berating (rating >= 4.0).
-    # ⚠️ 148 novel ratingnya 0 → kalau tidak disaring, hero bisa jadi kosong.
-    hero = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND COALESCE(rating,0) > 0 "
-        "ORDER BY rating DESC, COALESCE(bookmark,0) DESC LIMIT 5")]
-    # ═══════════════════════════════════════════════════════════════════
-    #  ISI SECTION — HARUS JUJUR (aturan user 29 Sep: "isi dengan jujur
-    #  sesuai api kita"). Tiap judul di bawah WAJIB dibuktikan query-nya.
-    #  Jejak data dB: rating terisi 347/496 · bookmark>0 345/496 ·
-    #  tipe light 149 / web 320 · status complete 207 / ongoing 289.
-    # ═══════════════════════════════════════════════════════════════════
-    # PALING PANJANG — DIHAPUS atas permintaan user 29 Sep ("gajelas").
-    # BERILUSTRASI — DIHAPUS juga atas permintaan user.
-    # DARI JEPANG / DARI KOREA — DIHAPUS atas permintaan user 29 Sep ("hapus aja").
-    # WEB NOVEL / LIGHT NOVEL — tipe nyata dari dB (web 320 · light 149). DIPERTAHANKAN.
-    light = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND LOWER(COALESCE(tipe,'')) LIKE '%light%' "
-        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
-    webnovel = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND LOWER(COALESCE(tipe,'')) LIKE '%web%' "
-        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
-    # RANDOM: tetap sama tiap hari (seed tanggal) supaya tidak berkedip saat reload
+    populer = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
+        "ORDER BY jumlah_bab DESC LIMIT 8")]
+    terbaru = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
+        "ORDER BY COALESCE(waktu_update, created_at) DESC LIMIT 12")]
     seed = int(time.strftime("%Y%m%d"))
     acak = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
         "ORDER BY (id * ?) % 10007 LIMIT 12", (seed,))]
-    # BARU DITAMBAH: created_at terbaru (TERISI SEMUA 496/496, tidak seperti
-    # waktu_update yang cuma 17/496 → itu sebabnya dulu tidak dipakai).
-    baru = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "ORDER BY created_at DESC, id DESC LIMIT 12")]
-    # UPDATE TERBARU: pakai bab.tanggal (waktu_update KOSONG di 479/496 novel).
-    # ⚠️ JANGAN "GROUP BY n.id + MAX()" → 12 dtk (pindai 111.689 bab).
-    # ⚠️ JANGAN cuma 400 bab: 400 bab terakhir cuma dari 7 NOVEL (satu novel
-    #    bisa 110 bab berurutan) → section isinya nyaris 1 novel.
-    #    JUJUR = ambil 6.000 bab (kena index idx_bab_tanggal) → 58 novel unik.
-    update, sudah = [], set()
-    for r in ambil("""
-        SELECT b.tanggal AS tg, n.*
-        FROM bab b JOIN novel n ON n.id = b.novel_id
-        WHERE b.tanggal IS NOT NULL AND b.tanggal != ''
-          AND n.cover_webp IS NOT NULL AND n.judul != ''
-        ORDER BY b.tanggal DESC LIMIT 6000"""):
-        if r["id"] in sudah:
-            continue
-        sudah.add(r["id"])
-        k = kartu(r)
-        k["tanggal"] = (r["tg"] or "")[:10]
-        k["c_bab"] = r["jumlah_bab"]
-        # nomor urut 1..12 — dipakai templat daftar 2 kolom (beranda.html).
-        # ⚠️ JANGAN hitung di Jinja: `dict()` & `list.append()` TIDAK ada di
-        #    Jinja → nomor keluar KOSONG (pelajaran 29 Sep).
-        k["no"] = len(update) + 1
-        update.append(k)
-        if len(update) >= 16:
-            break
-
-    # ── JELAJAHI ACAK: hitung posisi kipas DI SINI, jangan di Jinja ──
-    # ⚠️ Jinja tidak bisa `dict()`/`append`/kurung kurawal → pelajaran 29 Sep.
-    # Rumus user: offset = i-1.5 · translateY(|offset|*7) · rotate(offset*7)
-    # ⚠️ Posisi HORIZONTAL sekarang ditentukan CSS dari `--i` (tidak lagi
-    #    `margin-left` bertingkat) supaya kipas benar-benar di tengah &
-    #    kartunya ikut membesar di layar lebar (pelajaran 29 Sep).
-    for j, k in enumerate(acak[:5]):
-        d = j - 1.5
-        k["i"] = j
-        k["lr"] = j * 52          # masih dikirim, tapi tidak dipakai lagi
-        k["sudut"] = round(d * 7, 1)
-        k["geser"] = round(abs(d) * 7, 1)
-        k["z"] = j
-    # TAMAT: status Completed (207 novel — judul jujur).
-    tamat = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND LOWER(COALESCE(status,'')) LIKE '%complete%' "
-        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
-    # MASIH JALAN: status Ongoing (289 novel) — dulu ada tapi tidak dipakai.
     ongoing = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND LOWER(COALESCE(status,'')) LIKE '%ongoing%' "
-        "ORDER BY COALESCE(rating,0) DESC, COALESCE(bookmark,0) DESC LIMIT 12")]
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
+        "AND LOWER(COALESCE(status,'')) LIKE '%ongoing%' ORDER BY jumlah_bab DESC LIMIT 12")]
+    tamat = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL "
+        "AND LOWER(COALESCE(status,'')) LIKE '%tamat%' ORDER BY jumlah_bab DESC LIMIT 12")]
     genre = [dict(r) for r in ambil("""
         SELECT g.slug, g.nama, COUNT(ng.novel_id) jumlah FROM genre g
         JOIN novel_genre ng ON ng.genre_id = g.id
         GROUP BY g.id ORDER BY jumlah DESC LIMIT 18""")]
     tag = [dict(r) for r in ambil(
         "SELECT slug, nama, jumlah_novel FROM tag ORDER BY jumlah_novel DESC LIMIT 24")]
-
-    # RATING TERTINGGI — ambang 4.2 (112 novel, SEMUA benar-benar berating).
-    # Dulu ambang 4.5 → cuma 43 novel, dan daftarnya bercampur novel rating 0
-    # yang ikut terurut di bawah → tidak jujur.
-    premium = [kartu(r) for r in ambil(
-        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
-        "AND COALESCE(rating,0) >= 4.2 "
-        "ORDER BY rating DESC, jumlah_bab DESC LIMIT 12")]
-
-    # ═══════════════════════════════════════════════════════════════
-    #  MINGGU INI  —  section sorotan gaya "Opening Story" (3 cover)
-    #  ⚠️ status di dB = 'Completed' (C BESAR!) — 'completed' hasilnya 0.
-    #  Saring cover_webp IS NOT NULL → 21 dari 207 novel Completed tidak
-    #  punya cover (kalau tidak disaring, muncul gambar rusak).
-    #  Daftar diambil 8 novel; JS (web.js) yang menggeser Prev/Next dengan
-    #  memutar indeks melingkar, dan cover tetangga ikut berputar.
-    # ═══════════════════════════════════════════════════════════════
-    minggu = []
-    for r in ambil(
-        "SELECT id, slug, judul, COALESCE(NULLIF(author,''), penulis) AS penulis, "
-        "sinopsis, jumlah_bab, rating FROM novel "
-        "WHERE status='Completed' AND cover_webp IS NOT NULL AND judul != '' "
-        "ORDER BY rating DESC, jumlah_bab DESC LIMIT 8"):
-        mg = dict(r)
-        mg["cover"] = f"/cover/{r['id']}.webp"
-        mg["url"] = f"/novel/{r['slug']}"
-        mg["tags"] = [t["nama"] for t in ambil(
-            "SELECT t.nama FROM tag t JOIN novel_tag nt ON nt.tag_id=t.id "
-            "WHERE nt.novel_id=? ORDER BY t.jumlah_novel DESC LIMIT 5", (r["id"],))]
-        mg["desk"] = (r["sinopsis"] or "").strip()
-        mg["penulis"] = mg["penulis"] or "Tanpa Penulis"
-        minggu.append(mg)
-
     return tpl.TemplateResponse(request, "beranda.html", {
-        "situs": SITUS, "halaman": "beranda", "nama": NAMA, "desk": DESK,
+        "situs": SITUS, "nama": NAMA, "desk": DESK,
         "kanon": str(request.url), "total_novel": n, "total_bab": b,
-        "hero": hero, "acak": acak, "baru": baru,
-        "update": update, "tamat": tamat, "ongoing": ongoing,
-        "genre": genre, "tag": tag, "premium": premium,
-        "light": light, "webnovel": webnovel, "minggu": minggu,
+        "populer": populer, "terbaru": terbaru, "acak": acak,
+        "ongoing": ongoing, "tamat": tamat, "genre": genre, "tag": tag,
     })
 
 
@@ -333,7 +132,7 @@ def novel(request: Request, slug: str):
           AND n.id<>? AND n.cover_webp IS NOT NULL
         ORDER BY n.jumlah_bab DESC LIMIT 12""", (r["id"], r["id"]))]
     return tpl.TemplateResponse(request, "novel.html", {
-        "situs": SITUS, "halaman": "novel", "nama": NAMA,
+        "situs": SITUS, "nama": NAMA,
         "judul": f"{r['judul']}: {NAMA}",
         "desk": (r["sinopsis"] or DESK)[:160],
         "kanon": f"{SITUS}/novel/{slug}",
@@ -355,27 +154,6 @@ def bab(request: Request, slug: str, urutan: int):
     b = ambil("SELECT * FROM bab WHERE novel_id=? AND urutan=?", (n["id"], urutan), satu=True)
     if not b:
         raise HTTPException(404)
-
-    # ── GERBANG 3 BAB (dihitung PER NOVEL, bukan total) ──
-    pengguna = getattr(request.state, "pengguna", None)
-    tamu = getattr(request.state, "tamu", None)
-    if pengguna:
-        auth.catat_baca(pengguna["id"], n["id"], urutan)
-    else:
-        if not auth.boleh_baca_tanpa_login(tamu, n["id"], urutan):
-            semua_awal = [dict(x) for x in ambil(
-                "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan LIMIT 3",
-                (n["id"],))]
-            return tpl.TemplateResponse(request, "gerbang.html", {
-                "situs": SITUS, "halaman": "bab", "nama": NAMA,
-                "judul": "Wajib Masuk: " + n["judul"] + " | " + NAMA,
-                "desk": "Bab 1-3 gratis. Masuk untuk lanjut membaca.",
-                "kanon": SITUS + "/novel/" + slug + "/bab/" + str(urutan),
-                "n": dict(n), "slug": slug, "urutan": urutan,
-                "batas": auth.BATAS_TAMU, "bab_awal": semua_awal,
-                "pengguna": None,
-            })
-        auth.catat_baca_tamu(tamu, n["id"], urutan)
     gmb = [dict(x) for x in ambil(
         "SELECT urutan, file_lokal, url_asli, caption FROM bab_gambar WHERE bab_id=? ORDER BY urutan",
         (b["id"],))]
@@ -391,119 +169,24 @@ def bab(request: Request, slug: str, urutan: int):
     # paragraf: pisah baris → HTML aman (autoescape Jinja)
     teks = (b["teks"] or "").split("\n")
     ada_teks = bool((b["teks"] or "").strip())
-    # daftar bab ringkas untuk panel di bawah halaman baca (template bab.html)
-    semua_bab = [dict(x) for x in ambil(
-        "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan",
-        (n["id"],))]
     return tpl.TemplateResponse(request, "bab.html", {
-        "situs": SITUS, "halaman": "bab", "nama": NAMA,
+        "situs": SITUS, "nama": NAMA,
         "judul": f"{b['judul']}: {n['judul']} | {NAMA}",
         "desk": (b["teks"] or "")[:150],
         "kanon": f"{SITUS}/novel/{slug}/bab/{urutan}",
         "n": dict(n), "b": dict(b), "paragraf": teks, "gambar": gmb,
-        "sebelum": sebelum, "sesudah": sesudah, "semua_bab": semua_bab,
-        "ada_teks": ada_teks,
+        "sebelum": sebelum, "sesudah": sesudah,
     })
 
 
 # ═════════════════════════════════════════════════════════════
 #  HALAMAN: JELAJAH / GENRE / TAG / CARI
 # ═════════════════════════════════════════════════════════════
-# ═════════════════════════════════════════════════════════════
-#  HALAMAN MASUK / DAFTAR  +  API AUTH (Firebase)
-# ═════════════════════════════════════════════════════════════
-FB_WEB = {
-    "apiKey":            os.environ.get("FB_API_KEY", ""),
-    "authDomain":        os.environ.get("FB_AUTH_DOMAIN", ""),
-    "projectId":         os.environ.get("FB_PROJECT_ID", ""),
-    "storageBucket":     os.environ.get("FB_STORAGE_BUCKET", ""),
-    "messagingSenderId": os.environ.get("FB_SENDER_ID", ""),
-    "appId":             os.environ.get("FB_APP_ID", ""),
-}
-FB_JSLIBS = [
-    "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
-    "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js",
-]
-
-
-@app.get("/masuk", response_class=HTMLResponse)
-def masuk(request: Request):
-    return tpl.TemplateResponse(request, "masuk.html", {
-        "situs": SITUS, "halaman": "masuk", "nama": NAMA,
-        "judul": f"Masuk · {NAMA}",
-        "desk": "Masuk untuk membaca semua bab, simpan riwayat & pustaka pribadi.",
-        "kanon": f"{SITUS}/masuk",
-        "fb_web": FB_WEB, "fb_jslibs": FB_JSLIBS,
-        "fb_siap": bool(FB_WEB["apiKey"] and auth.firebase_siap()),
-        "pengguna": getattr(request.state, "pengguna", None),
-    })
-
-
-@app.post("/api/auth/sesi")
-async def api_auth_sesi(request: Request):
-    """Tukar ID token Firebase (dari browser) dengan cookie sesi web.
-
-    ⚠️ Token DIVERIFIKASI di server (firebase-admin) — bukan dipercaya begitu saja.
-    """
-    if auth.terlalu_sering("ip:" + (request.client.host if request.client else "-")):
-        return JSONResponse({"ok": False, "pesan": "Terlalu banyak percobaan. Coba lagi nanti."}, 429)
-    auth.catat_coba("ip:" + (request.client.host if request.client else "-"))
-
-    data = {}
-    try:
-        data = await request.json()
-    except Exception:
-        pass
-    id_token = (data or {}).get("idToken", "")
-    if not id_token:
-        return JSONResponse({"ok": False, "pesan": "Token tidak ada."}, 400)
-
-    klaim = auth.verifikasi_token(id_token)
-    if not klaim:
-        return JSONResponse({"ok": False, "pesan": "Token tidak sah atau kadaluarsa."}, 401)
-
-    p = auth.pengguna_dari_firebase(klaim)
-    if not p:
-        return JSONResponse({"ok": False, "pesan": "Gagal membuat akun."}, 500)
-
-    tok = auth.buat_sesi(
-        p["id"],
-        request.client.host if request.client else None,
-        request.headers.get("user-agent"),
-    )
-    resp = JSONResponse({
-        "ok": True,
-        "pengguna": {"nama": p["nama"], "email": p["email"], "foto": p["foto"]},
-        "lanjut": (data or {}).get("lanjut") or "/",
-    })
-    resp.set_cookie(auth.COOKIE_SESI, tok, max_age=60 * 60 * 24 * auth.UMUR_SESI,
-                    httponly=True, samesite="lax", secure=True)
-    return resp
-
-
-@app.get("/api/auth/me")
-def api_auth_me(request: Request):
-    p = getattr(request.state, "pengguna", None)
-    if not p:
-        return JSONResponse({"ok": True, "masuk": False})
-    return JSONResponse({"ok": True, "masuk": True,
-                         "pengguna": {"nama": p["nama"], "email": p["email"], "foto": p["foto"]}})
-
-
-@app.post("/keluar")
-@app.get("/keluar")
-def keluar(request: Request):
-    auth.akhiri_sesi(request.cookies.get(auth.COOKIE_SESI))
-    resp = RedirectResponse("/", status_code=303)
-    resp.delete_cookie(auth.COOKIE_SESI)
-    return resp
-
-
 @app.get("/jelajah", response_class=HTMLResponse)
 def jelajah(request: Request,
             q: str = "", status: str = "", tipe: str = "",
-            genre: str = "", tag: str = "", negara: str = "",
-            order: str = "populer", page: int = 1, per: int = 24):
+            genre: str = "", tag: str = "", order: str = "populer",
+            page: int = 1, per: int = 24):
     where, par = ["n.cover_webp IS NOT NULL"], []
     if q:
         where.append("(n.judul LIKE ? OR COALESCE(n.penulis, n.author) LIKE ?)")
@@ -520,25 +203,9 @@ def jelajah(request: Request,
         where.append("n.id IN (SELECT nt.novel_id FROM novel_tag nt "
                      "JOIN tag t ON t.id=nt.tag_id WHERE t.slug=?)")
         par.append(tag)
-    # negara (dipakai section "Dari Jepang"/"Dari Korea" di beranda)
-    if negara:
-        where.append("LOWER(COALESCE(n.country,'')) LIKE ?")
-        par.append(f"%{negara.lower()}%")
-    # ⚠️ "populer" TETAP ada (bookmark) tapi tidak dipakai di beranda karena
-    #    151/496 novel bookmark-nya 0 → urutannya tidak jujur. Sekarang beranda
-    #    pakai "panjang" (jumlah_bab nyata) & "update" (bab.tanggal terbaru).
-    urut = {"populer": "COALESCE(n.bookmark,0) DESC, n.jumlah_bab DESC",
-            "panjang": "n.jumlah_bab DESC",
-            "update": "COALESCE(n.waktu_update,n.created_at) DESC",
+    urut = {"populer": "n.jumlah_bab DESC", "baru": "COALESCE(n.waktu_update,n.created_at) DESC",
             "judul": "n.judul COLLATE NOCASE ASC", "rating": "n.rating DESC"}\
         .get(order, "n.jumlah_bab DESC")
-    # "ilustrasi": hanya novel yang benar-benar punya baris di bab_gambar.
-    if order == "ilustrasi":
-        where.append("n.id IN (SELECT n2.id FROM novel n2 "
-                     "JOIN bab b2 ON b2.novel_id=n2.id "
-                     "JOIN bab_gambar g2 ON g2.bab_id=b2.id)")
-    if order == "acak":
-        urut = f"(n.id * {int(time.strftime('%Y%m%d'))}) % 10007 ASC"
     W = " WHERE " + " AND ".join(where)
     total = ambil(f"SELECT COUNT(*) c FROM novel n{W}", tuple(par), satu=True)["c"]
     baris = ambil(f"SELECT n.* FROM novel n{W} ORDER BY {urut} LIMIT ? OFFSET ?",
@@ -550,12 +217,11 @@ def jelajah(request: Request,
     t_list = [dict(x) for x in ambil(
         "SELECT slug, nama, jumlah_novel FROM tag ORDER BY jumlah_novel DESC LIMIT 60")]
     return tpl.TemplateResponse(request, "jelajah.html", {
-        "situs": SITUS, "halaman": "jelajah", "nama": NAMA,
+        "situs": SITUS, "nama": NAMA,
         "judul": f"Jelajah Novel: {NAMA}", "desk": DESK,
         "kanon": f"{SITUS}/jelajah",
         "hasil": [kartu(x) for x in baris], "total": total,
         "q": q, "status": status, "tipe": tipe, "genre": genre, "tag": tag,
-        "negara": negara,
         "order": order, "page": page, "per": per,
         "total_hal": (total + per - 1) // per,
         "genre_list": g_list, "tag_list": t_list,
@@ -574,7 +240,7 @@ def genre(request: Request, slug: str, page: int = 1, per: int = 24):
         ORDER BY n.jumlah_bab DESC LIMIT ? OFFSET ?""",
                   (g["id"], per, (page - 1) * per))
     return tpl.TemplateResponse(request, "daftar.html", {
-        "situs": SITUS, "halaman": "daftar", "nama": NAMA,
+        "situs": SITUS, "nama": NAMA,
         "judul": f"Genre {g['nama']}: {NAMA}", "desk": f"Novel genre {g['nama']}.",
         "kanon": f"{SITUS}/genre/{slug}",
         "kepala": f"Genre: {g['nama']}", "hasil": [kartu(x) for x in baris],
@@ -595,7 +261,7 @@ def tag(request: Request, slug: str, page: int = 1, per: int = 24):
         ORDER BY n.jumlah_bab DESC LIMIT ? OFFSET ?""",
                   (t["id"], per, (page - 1) * per))
     return tpl.TemplateResponse(request, "daftar.html", {
-        "situs": SITUS, "halaman": "daftar", "nama": NAMA,
+        "situs": SITUS, "nama": NAMA,
         "judul": f"Tag {t['nama']}: {NAMA}", "desk": f"Novel dengan tag {t['nama']}.",
         "kanon": f"{SITUS}/tag/{slug}",
         "kepala": f"Tag: {t['nama']}", "hasil": [kartu(x) for x in baris],
@@ -624,7 +290,7 @@ def cari(request: Request, q: str = "", page: int = 1, per: int = 24):
         except sqlite3.Error:
             bab_hits = []
     return tpl.TemplateResponse(request, "cari.html", {
-        "situs": SITUS, "halaman": "cari", "nama": NAMA,
+        "situs": SITUS, "nama": NAMA,
         "judul": f"Cari {q}: {NAMA}", "desk": DESK,
         "kanon": f"{SITUS}/cari?q={q}",
         "q": q, "hasil": hasil, "total": total, "bab_hits": bab_hits,
@@ -748,42 +414,12 @@ def apk(request: Request):
     n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
     b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
     return tpl.TemplateResponse(request, "apk.html", {
-        "situs": SITUS, "halaman": "apk", "nama": NAMA,
+        "situs": SITUS, "nama": NAMA,
         "judul": f"Unduh APK: {NAMA}",
         "desk": "Unduh aplikasi Android Naver Novel untuk baca offline.",
         "kanon": f"{SITUS}/apk",
         "apk_url": "/static/naver.apk" if apk.exists() else None,
         "total_novel": n, "total_bab": b,
-    })
-
-
-# ═════════════════════════════════════════════════════════════
-#  HALAMAN: PUSTAKA & PROFIL (nav bawah)
-#  ⚠️ BELUM ada sistem login — jadi halaman ini JUJUR menjelaskan
-#     keadaannya, BUKAN pura-pura punya data pengguna.
-#     (Rencana login ada di CATATAN/nanti-kerjaan-tertunda.md)
-# ═════════════════════════════════════════════════════════════
-@app.get("/pustaka", response_class=HTMLResponse)
-def pustaka(request: Request):
-    n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
-    b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
-    g = ambil("SELECT COUNT(*) c FROM bab_gambar", satu=True)["c"]
-    return tpl.TemplateResponse(request, "pustaka.html", {
-        "situs": SITUS, "halaman": "pustaka", "nama": NAMA,
-        "judul": f"Pustaka: {NAMA}",
-        "desk": "Koleksi pribadi dan riwayat baca (menunggu sistem login).",
-        "kanon": f"{SITUS}/pustaka",
-        "total_novel": n, "total_bab": b, "total_gambar": g,
-    })
-
-
-@app.get("/profil", response_class=HTMLResponse)
-def profil(request: Request):
-    return tpl.TemplateResponse(request, "profil.html", {
-        "situs": SITUS, "halaman": "profil", "nama": NAMA,
-        "judul": f"Profil: {NAMA}",
-        "desk": "Akun dan pengaturan (menunggu sistem login).",
-        "kanon": f"{SITUS}/profil",
     })
 
 
@@ -795,7 +431,7 @@ def profil(request: Request):
 def _hal_galat(request: Request, kode: int, pesan: str, rinci: str):
     q = request.query_params.get("q", "")
     return tpl.TemplateResponse(request, "galat.html", {
-        "situs": SITUS, "halaman": "galat", "nama": NAMA, "kanon": str(request.url),
+        "situs": SITUS, "nama": NAMA, "kanon": str(request.url),
         "judul": f"{kode}: {pesan} | {NAMA}",
         "desk": rinci,
         "kode": kode, "pesan": pesan, "rinci": rinci, "q": q,

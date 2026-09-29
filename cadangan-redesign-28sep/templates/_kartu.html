@@ -1,0 +1,10 @@
+{# Kartu novel — dipakai di rak geser & grid #}
+<a class="kartu" href="{{ n.url }}">
+  <div class="kartu-cover">
+    {% if n.cover %}<img src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">
+    {% else %}<span class="tanpa-cover">{{ n.judul[:1] }}</span>{% endif %}
+    {% if n.status %}<span class="lencana">{{ n.status }}</span>{% endif %}
+  </div>
+  <h3 class="kartu-judul">{{ n.judul }}</h3>
+  <p class="kartu-meta">{{ n.jumlah_bab }} bab{% if n.rating %} · Rating {{ n.rating }}{% endif %}</p>
+</a>

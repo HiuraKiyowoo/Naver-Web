@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block isi %}
+
+<article class="detail-atas">
+  <div class="detail-cover">
+    {% if cover %}<img src="{{ cover }}" alt="Cover {{ n.judul }}">
+    {% else %}<span class="tanpa-cover">{{ n.judul[:1] }}</span>{% endif %}
+  </div>
+  <div class="detail-info">
+    <h1>{{ n.judul }}</h1>
+    {% if n.judul_alternatif %}<p class="redup kecil">{{ n.judul_alternatif }}</p>{% endif %}
+    <div class="meta-baris">
+      <span class="pil">Bab <b>{{ jlh_bab }}</b></span>
+      {% if n.rating %}<span class="pil">Rating <b>{{ n.rating }}</b></span>{% endif %}
+      {% if n.status %}<span class="pil">Status <b>{{ n.status }}</b></span>{% endif %}
+      {% if n.tipe %}<span class="pil"><b>{{ n.tipe }}</b></span>{% endif %}
+      {% if n.penulis or n.author %}<span class="pil">Penulis <b>{{ n.penulis or n.author }}</b></span>{% endif %}
+      {% if n.country %}<span class="pil">{{ n.country }}</span>{% endif %}
+      {% if n.tahun %}<span class="pil">{{ n.tahun }}</span>{% endif %}
+    </div>
+    {% if genre %}
+    <div class="tag-baris">
+      {% for g in genre %}<a class="tag" href="/genre/{{ g.slug }}">{{ g.nama }}</a>{% endfor %}
+    </div>
+    {% endif %}
+    <div class="hero-aksi" style="margin-top:16px">
+      {% if bab %}<a class="tombol utama" href="/novel/{{ n.slug }}/bab/{{ bab[0].urutan }}">Baca Bab 1</a>{% endif %}
+      {% if bab|length > 1 %}<a class="tombol" href="/novel/{{ n.slug }}/bab/{{ bab[-1].urutan }}">Bab Terakhir</a>{% endif %}
+    </div>
+  </div>
+</article>
+
+{% if n.sinopsis %}
+<section class="sinopsis" id="sinopsis">
+  <h2 style="font-size:15px;color:var(--cyan)">Sinopsis</h2>
+  <p>{{ n.sinopsis }}</p>
+  <button class="lebih" id="btn-sinopsis" style="background:none;border:0;cursor:pointer;padding:8px 0">Selengkapnya ▾</button>
+</section>
+{% endif %}
+
+{% if tag %}
+<section class="bagian">
+  <div class="bagian-kepala"><h2>Tag</h2></div>
+  <div class="tag-baris">
+    {% for t in tag %}<a class="tag" href="/tag/{{ t.slug }}">{{ t.nama }}</a>{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="bagian">
+  <div class="bagian-kepala">
+    <h2>Daftar Bab <span class="redup" style="font-weight:400">({{ jlh_bab }})</span></h2>
+  </div>
+  <div class="daftar-bab">
+    {% for b in bab %}
+    <a class="item-bab" href="/novel/{{ n.slug }}/bab/{{ b.urutan }}">
+      <span><span class="no">{{ b.urutan }}.</span> {{ b.judul }}</span>
+      {% if b.ada_gambar %}<span class="redup kecil" title="Ada ilustrasi">Bergambar</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+{% if serupa %}
+<section class="bagian">
+  <div class="bagian-kepala"><h2>Mirip Ini</h2></div>
+  <div class="rak" data-geser>
+    {% for n in serupa %}{% include "_kartu.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Book","name":{{ n.judul|tojson }},
+{% if n.penulis or n.author %}"author":{"@type":"Person","name":{{ (n.penulis or n.author)|tojson }}},{% endif %}
+{% if n.sinopsis %}"description":{{ n.sinopsis[:300]|tojson }},{% endif %}
+"numberOfPages":{{ jlh_bab }},"inLanguage":"id"}
+</script>
+
+{% endblock %}

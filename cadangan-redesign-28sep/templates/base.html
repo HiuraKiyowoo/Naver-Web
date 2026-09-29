@@ -1,0 +1,57 @@
+&lt;!DOCTYPE html&gt;
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block judul %}{{ judul|default(nama) }}{% endblock %}</title>
+<meta name="description" content="{{ desk|default('') }}">
+<link rel="canonical" href="{{ kanon|default(situs) }}">
+{% if gambar_og %}<meta property="og:image" content="{{ gambar_og }}">{% endif %}
+<meta property="og:title" content="{{ judul|default(nama) }}">
+<meta property="og:description" content="{{ desk|default('') }}">
+<meta property="og:site_name" content="{{ nama }}">
+<meta name="theme-color" content="#071018">
+<link rel="icon" href="/static/ikon.svg">
+<link rel="stylesheet" href="/static/web.css">
+</head>
+<body>
+<header class="kepala">
+  <div class="wadah kepala-dalam">
+    <a class="logo" href="/">
+      <span class="logo-tanda">N</span>
+      <span class="logo-teks">Naver<small>Novel</small></span>
+    </a>
+    <form class="cari-atas" action="/cari" method="get" role="search">
+      <input type="search" name="q" placeholder="Cari judul, penulis, atau isi bab…"
+             value="{{ q|default('') }}" aria-label="Cari">
+      <button type="submit" aria-label="Cari">Cari</button>
+    </form>
+    <nav class="nav-atas">
+      <a href="/jelajah">Jelajah</a>
+      <a href="/jelajah?order=baru">Terbaru</a>
+      <a class="tombol-apk" href="/apk">Unduh APK</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wadah">
+{% block isi %}{% endblock %}
+</main>
+
+<footer class="kaki">
+  <div class="wadah kaki-dalam">
+    <div>
+      <b>{{ nama }}</b>: arsip pribadi novel terjemahan.
+      <br><span class="redup">{{ total_novel|default('') }} novel · {{ total_bab|default('') }} bab</span>
+    </div>
+    <div class="kaki-tautan">
+      <a href="/jelajah">Jelajah</a>
+      <a href="/sitemap.xml">Sitemap</a>
+      <a href="/status">Status</a>
+      <a href="/apk">APK</a>
+    </div>
+  </div>
+</footer>
+<script src="/static/web.js" defer></script>
+</body>
+</html>

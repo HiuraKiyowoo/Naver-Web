@@ -1,4 +1,7 @@
-cadangan-redesign-28sep/
+# jangan pernah masuk repo
+rahasia/
+*.env
+users.db
+users.db-wal
+users.db-shm
 __pycache__/
-*.pyc
-anti-slop/cadangan-001/

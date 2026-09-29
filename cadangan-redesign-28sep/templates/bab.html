@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block isi %}
+
+<nav class="redup kecil" style="margin-top:18px">
+  <a href="/">Beranda</a> › <a href="/novel/{{ n.slug }}">{{ n.judul }}</a> › Bab {{ b.urutan }}
+</nav>
+
+<header class="baca-kepala">
+  <h1>{{ b.judul }}</h1>
+  <p class="redup kecil">
+    {{ n.judul }}{% if b.tanggal %} · {{ b.tanggal }}{% endif %}
+    · Bab {{ b.urutan }} dari {{ n.jumlah_bab }}
+  </p>
+</header>
+
+<div class="baca-isi">
+  {% for p in paragraf %}
+    {% if p.strip() %}<p>{{ p }}</p>{% endif %}
+  {% endfor %}
+  {% if ada_teks == false %}<p class="redup">(Bab ini tidak memiliki teks.)</p>{% endif %}
+</div>
+
+{% if gambar %}
+<section class="bagian">
+  <div class="bagian-kepala"><h2>Ilustrasi</h2></div>
+  <div style="display:grid;gap:14px;max-width:74ch;margin:0 auto">
+    {% for g in gambar %}
+    <figure style="margin:0">
+      <img src="{{ g.sumber }}" alt="{{ g.caption or ('Ilustrasi ' ~ g.urutan) }}" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').style.display='none'">
+      {% if g.caption %}<figcaption class="redup kecil" style="text-align:center;padding-top:6px">{{ g.caption }}</figcaption>{% endif %}
+    </figure>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<nav class="baca-nav">
+  <a class="{{ 'mati' if not sebelum }}" href="{{ ('/novel/' ~ n.slug ~ '/bab/' ~ sebelum) if sebelum else '#' }}">Sebelumnya</a>
+  <a class="kembali" href="/novel/{{ n.slug }}">Daftar Bab</a>
+  <a class="{{ 'mati' if not sesudah }}" href="{{ ('/novel/' ~ n.slug ~ '/bab/' ~ sesudah) if sesudah else '#' }}">Selanjutnya</a>
+</nav>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block isi %}
+
+<h1 style="margin-top:24px;font-size:22px">
+  {% if q %}Hasil untuk “{{ q }}”{% else %}Cari Novel{% endif %}
+</h1>
+{% if q %}<p class="redup kecil">{{ total }} novel · {{ bab_hits|length }} bab cocok</p>{% endif %}
+
+<form class="filter" method="get" action="/cari">
+  <input type="search" name="q" value="{{ q }}" placeholder="Judul, penulis, atau isi bab…" autofocus>
+  <button class="tombol utama" type="submit">Cari</button>
+</form>
+
+{% if hasil %}
+<div class="hasil-grid">
+  {% for n in hasil %}{% include "_kartu.html" %}{% endfor %}
+</div>
+{% endif %}
+
+{% if bab_hits %}
+<section class="bagian">
+  <div class="bagian-kepala"><h2>Bab yang Memuat Kata</h2></div>
+  <div class="hit-bab">
+    {% for h in bab_hits %}
+    <a href="/novel/{{ h.slug }}/bab/{{ h.urutan }}">
+      <b>{{ h.novel_judul }}</b>: {{ h.judul }}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if q and not hasil and not bab_hits %}
+<p class="kosong">Tidak ada hasil untuk “{{ q }}”.</p>
+{% endif %}
+
+{% endblock %}
