@@ -63,7 +63,7 @@ def _versi_aset() -> str:
     """
     try:
         t = max((BASE / "static" / n).stat().st_mtime
-                for n in ("web.css", "web.js")
+                for n in ("miruro.css", "web.css", "web.js")
                 if (BASE / "static" / n).exists())
         return str(int(t))
     except Exception:
@@ -120,7 +120,7 @@ def beranda(request: Request):
     hero = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
         "AND COALESCE(rating,0) >= 1 "
-        "ORDER BY rating DESC, bookmark DESC LIMIT 3")]
+        "ORDER BY rating DESC, bookmark DESC LIMIT 5")]
     # TRENDING: paling banyak di-bookmark
     trending = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
@@ -250,13 +250,18 @@ def bab(request: Request, slug: str, urutan: int):
     # paragraf: pisah baris → HTML aman (autoescape Jinja)
     teks = (b["teks"] or "").split("\n")
     ada_teks = bool((b["teks"] or "").strip())
+    # daftar bab ringkas untuk panel di bawah halaman baca (template bab.html)
+    semua_bab = [dict(x) for x in ambil(
+        "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan",
+        (n["id"],))]
     return tpl.TemplateResponse(request, "bab.html", {
         "situs": SITUS, "halaman": "bab", "nama": NAMA,
         "judul": f"{b['judul']}: {n['judul']} | {NAMA}",
         "desk": (b["teks"] or "")[:150],
         "kanon": f"{SITUS}/novel/{slug}/bab/{urutan}",
         "n": dict(n), "b": dict(b), "paragraf": teks, "gambar": gmb,
-        "sebelum": sebelum, "sesudah": sesudah,
+        "sebelum": sebelum, "sesudah": sesudah, "semua_bab": semua_bab,
+        "ada_teks": ada_teks,
     })
 
 

@@ -3,67 +3,72 @@
 
 {% block isi %}
 
-{# ── 1. HERO — gaya Miruro: banner 16:9 + cover 2:3 di kanan ── #}
+{# ── HERO CAROUSEL 16:9 (gaya Miruro) — pakai novel rating tertinggi ── #}
 {% if hero %}
-{% set h = hero[0] %}
 <section class="hero">
-  <div class="hero-isi">
-    {% if h.cover %}<img class="hero-banner" src="{{ h.cover }}" alt="" aria-hidden="true">{% endif %}
-    <div class="hero-grad"></div>
-    <div class="hero-kiri">
-      <span class="hero-label"><i></i>SOROTAN PEKAN INI</span>
-      <h1 class="hero-judul">{{ h.judul }}</h1>
-      <p class="hero-sub">{{ h.sinopsis or 'Novel terjemahan pilihan, lengkap dan rapi di arsip Naver.' }}</p>
-      <div class="hero-aksi">
-        <a class="btn btn-utama" href="{{ h.url }}">Baca Sekarang</a>
-        <a class="btn btn-sekunder" href="/jelajah">Jelajahi Katalog</a>
+  <div class="hero-track" id="heroTrack">
+    {% for h in hero %}
+    <article class="hero-item{% if loop.first %} aktif{% endif %}">
+      {% if h.cover %}<img class="hero-banner" src="{{ h.cover }}" alt="" loading="{{ 'eager' if loop.first else 'lazy' }}">{% endif %}
+      <div class="hero-gelap1"></div>
+      <div class="hero-gelap2"></div>
+      <div class="hero-dalam">
+        {% if h.cover %}<img class="hero-cover" src="{{ h.cover }}" alt="Cover {{ h.judul }}">{% endif %}
       </div>
-      <div class="hero-stat">
-        {% if h.rating %}<div><b>{{ h.rating }}</b><span>RATING</span></div>{% endif %}
-        <div><b>{{ h.jumlah_bab }}</b><span>BAB</span></div>
-        <div><b>{{ total_novel }}</b><span>NOVEL</span></div>
-        <div><b>{{ total_bab }}</b><span>BAB TOTAL</span></div>
+      <div class="hero-bawah">
+        {% if h.tipe %}<span class="hero-pil">{{ h.tipe }}</span>{% endif %}
+        {% if h.status %}<span class="hero-pil">{{ h.status }}</span>{% endif %}
+        <a class="hero-btn" href="{{ h.url }}">Baca →</a>
       </div>
-    </div>
-    <div class="hero-kanan">
-      {% if h.cover %}<img class="hero-cover" src="{{ h.cover }}" alt="Cover {{ h.judul }}">{% endif %}
-    </div>
+    </article>
+    {% endfor %}
   </div>
+  {% if hero|length > 1 %}
+  <div class="hero-titik" id="heroTitik">
+    {% for h in hero %}<span{% if loop.first %} class="on"{% endif %}></span>{% endfor %}
+  </div>
+  {% endif %}
 </section>
 {% endif %}
 
-{# ── 2. SEDANG POPULER (novelpia: Recently Popular) — bookmark DESC ── #}
-{% if trending %}
+<div class="wadah">
+
+{# ── SECTION pembantu (gaya Miruro: judul uppercase + panah) ── #}
+{% macro bagian(judul, sub, tautan, id, daftar, lencana='rating') %}
+{% if daftar %}
 <section class="bagian">
   <div class="bagian-kepala">
-    <h2>Sedang Populer</h2>
-    <a class="lebih" href="/jelajah?order=populer">MORE ›</a>
+    <a class="bagian-kiri" href="{{ tautan }}">
+      <h2>{{ judul }}</h2>
+      <span class="bagian-sub">{{ sub }}</span>
+    </a>
+    <div class="bagian-panah">
+      <button type="button" data-geser="kiri" data-rak="{{ id }}" aria-label="Sebelumnya">‹</button>
+      <button type="button" data-geser="kanan" data-rak="{{ id }}" aria-label="Berikutnya">›</button>
+    </div>
   </div>
-  <div class="rak">
-    {% for n in trending %}{% include "_kartu.html" %}{% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{# ── 3. RATING TERTINGGI (novelpia: Premium Originals) — rating DESC ── #}
-{% if premium %}
-<section class="bagian">
-  <div class="bagian-kepala">
-    <h2>Rating Tertinggi</h2>
-    <a class="lebih" href="/jelajah?order=rating">MORE ›</a>
-  </div>
-  <div class="rak">
-    {% for n in premium %}{% include "_kartu.html" %}{% endfor %}
+  <div class="rak" id="{{ id }}">
+    {% for n in daftar %}{% include "_kartu.html" %}{% endfor %}
   </div>
 </section>
 {% endif %}
+{% endmacro %}
 
-{# ── 4. TELUSURI GENRE — pil (novelpia: kategori) ── #}
+{{ bagian('Sedang Populer', 'Paling banyak dibaca', '/jelajah?order=populer', 'r1', trending, 'rating') }}
+{{ bagian('Rating Tertinggi', 'Nilai tertinggi dari pembaca', '/jelajah?order=rating', 'r2', premium, 'rating') }}
+{{ bagian('Baru Ditambahkan', 'Terbaru masuk arsip', '/jelajah?order=baru', 'r3', baru, 'status') }}
+{{ bagian('Update Terbaru', 'Bab paling baru', '/jelajah?order=update', 'r4', update, 'bab') }}
+{{ bagian('Sudah Tamat', 'Lengkap sampai akhir', '/jelajah?status=completed', 'r5', tamat, 'status') }}
+{{ bagian('Jelajahi Acak', 'Pilihan acak hari ini', '/jelajah?order=acak', 'r6', acak, 'rating') }}
+
+{# ── Telusuri Genre (pil) ── #}
 {% if genre %}
 <section class="bagian">
   <div class="bagian-kepala">
-    <h2>Telusuri Genre</h2>
-    <a class="lebih" href="/jelajah">MORE ›</a>
+    <a class="bagian-kiri" href="/jelajah">
+      <h2>Telusuri Genre</h2>
+      <span class="bagian-sub">Pilih sesuai selera</span>
+    </a>
   </div>
   <div class="pil-baris">
     {% for g in genre %}
@@ -73,77 +78,14 @@
 </section>
 {% endif %}
 
-{# ── 5. BARU DITAMBAHKAN (novelpia: Indie New Arrivals) — created_at DESC ── #}
-{% if baru %}
-<section class="bagian">
-  <div class="bagian-kepala">
-    <h2>Baru Ditambahkan</h2>
-    <a class="lebih" href="/jelajah?order=baru">MORE ›</a>
-  </div>
-  <div class="rak">
-    {% for n in baru %}{% include "_kartu.html" %}{% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{# ── 6. SUDAH TAMAT (novelpia: Edited Collection, badge END) ── #}
-{% if tamat %}
-<section class="bagian">
-  <div class="bagian-kepala">
-    <h2>Sudah Tamat</h2>
-    <a class="lebih" href="/jelajah?status=completed">MORE ›</a>
-  </div>
-  <div class="rak">
-    {% for n in tamat %}{% include "_kartu.html" %}{% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{# ── 7. LATEST UPDATE — dari bab.tanggal terbaru (novel berbeda) ── #}
-{% if update %}
-<section class="bagian">
-  <div class="bagian-kepala">
-    <h2>Update Terbaru</h2>
-    <a class="lebih" href="/jelajah?order=update">MORE ›</a>
-  </div>
-  <div class="rak">
-    {% for n in update %}{% include "_kartu.html" %}{% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{# ── 8. BARU DIBUKA (novelpia: Recently Opened) ── #}
-{% if dibuka %}
-<section class="bagian">
-  <div class="bagian-kepala">
-    <h2>Baru Dibuka</h2>
-    <a class="lebih" href="/jelajah?order=baru">MORE ›</a>
-  </div>
-  <div class="rak">
-    {% for n in dibuka %}{% include "_kartu.html" %}{% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{# ── 9. RANDOM NOVEL — jadi tetap sama tiap hari (seed tanggal) ── #}
-{% if acak %}
-<section class="bagian">
-  <div class="bagian-kepala">
-    <h2>Jelajahi Acak</h2>
-    <a class="lebih" href="/jelajah?order=acak">MORE ›</a>
-  </div>
-  <div class="rak">
-    {% for n in acak %}{% include "_kartu.html" %}{% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{# ── 10. TAG POPULER (novelpia: Popular Tags) — tabel tag jujur ── #}
+{# ── Tag Populer (pil) ── #}
 {% if tag %}
 <section class="bagian">
   <div class="bagian-kepala">
-    <h2>Tag Populer</h2>
-    <a class="lebih" href="/jelajah">MORE ›</a>
+    <a class="bagian-kiri" href="/jelajah">
+      <h2>Tag Populer</h2>
+      <span class="bagian-sub">Kata kunci terbanyak</span>
+    </a>
   </div>
   <div class="pil-baris">
     {% for t in tag %}
@@ -153,4 +95,8 @@
 </section>
 {% endif %}
 
+{# ── Baru Dibuka (rak) ── #}
+{{ bagian('Baru Dibuka', 'Baru mulai dibaca', '/jelajah?order=baru', 'r7', dibuka, 'status') }}
+
+</div>
 {% endblock %}

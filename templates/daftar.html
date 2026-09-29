@@ -1,27 +1,35 @@
 {% extends "base.html" %}
+{% block judul %}{{ kepala }}: {{ nama }}{% endblock %}
+
 {% block isi %}
+<div class="wadah" style="padding-top:96px">
 
-<h1 style="margin-top:24px;font-size:22px">{{ kepala }}</h1>
-<p class="redup kecil">{{ total }} novel</p>
+  {# ── kotak pilihan (gaya Miruro taxonomy) ── #}
+  <div class="kotak4" style="margin:0 8px 24px">
+    <a href="/jelajah?order=populer"><i>◆</i><span>Populer</span></a>
+    <a href="/jelajah?order=rating"><i>★</i><span>Rating</span></a>
+    <a href="/jelajah?order=baru"><i>＋</i><span>Terbaru</span></a>
+    <a href="/jelajah?order=acak"><i>↻</i><span>Acak</span></a>
+  </div>
 
-{% if hasil %}
-<div class="hasil-grid">
-  {% for n in hasil %}{% include "_kartu.html" %}{% endfor %}
+  <div class="judul-hal">
+    <div>
+      <h1>{{ kepala }}</h1>
+      <p>{{ '{:,}'.format(total).replace(',', '.') }} novel</p>
+    </div>
+  </div>
+
+  {% if hasil %}
+  <div class="grid">
+    {% for n in hasil %}{% include "_kartu.html" %}{% endfor %}
+  </div>
+  {% else %}
+  <div class="kosong">
+    <b>Belum ada novel</b>
+    <span>Daftar ini masih kosong.</span>
+  </div>
+  {% endif %}
+
+  {% include "_halaman.html" %}
 </div>
-{% if total_hal > 1 %}
-<nav class="halaman">
-  {% if page > 1 %}<a href="{{ dasar_url }}?page={{ page-1 }}">Sebelumnya</a>{% endif %}
-  {% for p in range(1, total_hal+1) %}
-    {% if p <= 3 or p > total_hal-2 or (p >= page-1 and p <= page+1) %}
-      {% if p == page %}<span class="kini">{{ p }}</span>
-      {% else %}<a href="{{ dasar_url }}?page={{ p }}">{{ p }}</a>{% endif %}
-    {% elif p == 4 or p == total_hal-2 %}<span>…</span>{% endif %}
-  {% endfor %}
-  {% if page < total_hal %}<a href="{{ dasar_url }}?page={{ page+1 }}">Berikutnya</a>{% endif %}
-</nav>
-{% endif %}
-{% else %}
-<p class="kosong">Belum ada novel di bagian ini.</p>
-{% endif %}
-
 {% endblock %}

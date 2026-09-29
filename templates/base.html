@@ -10,80 +10,64 @@
 <meta property="og:title" content="{{ judul|default(nama) }}">
 <meta property="og:description" content="{{ desk|default('') }}">
 <meta property="og:site_name" content="{{ nama }}">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#0a0a0c">
 <link rel="icon" href="/static/ikon.svg">
-{# font lokal (novelpia pakai Noto Sans + Pretendard). Salinan font ada di
-   /static/font/ supaya tidak bergantung CDN & huruf KR/JP tampil benar. #}
-<link rel="preload" href="/static/font/NotoSans.ttf" as="font" type="font/ttf" crossorigin>
-{# versi CSS ikut mtime berkas → setiap design berubah, Cloudflare & browser
-   otomatis ambil yang baru (pelajaran 28 Sep: CF cache 4 jam bikin CSS basi) #}
-<link rel="preload" href="/static/web.css?v={{ versi_aset() }}" as="style">
-<link rel="stylesheet" href="/static/web.css?v={{ versi_aset() }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700;800;900&display=swap">
-{# lapisan gaya MENIRU novelpia (dipasang SETELAH web.css supaya menimpa) #}
-<link rel="stylesheet" href="/static/tema-novelpia.css?v={{ versi_aset() }}">
-{# lapisan gaya Miruro (paling akhir = paling menang). Dibuat 29 Sep 2026 #}
+{# versi CSS ikut mtime berkas → CF & browser otomatis ambil yang baru #}
 <link rel="stylesheet" href="/static/miruro.css?v={{ versi_aset() }}">
+<script src="/static/web.js?v={{ versi_aset() }}" defer></script>
 </head>
 <body>
 <header class="kepala">
-  <div class="wadah kepala-dalam">
-    <a class="logo" href="/">
-      <span class="logo-tanda">N</span>
-      <span class="logo-teks">Naver<small>Novel</small></span>
-    </a>
+  <div class="kepala-dalam">
+    <a class="logo" href="/">{{ nama }}</a>
     <form class="cari-atas" action="/cari" method="get" role="search">
-      <input type="search" name="q" placeholder="Cari judul, penulis, atau isi bab…"
+      <span class="cari-ikon" aria-hidden="true">⌕</span>
+      <input type="search" name="q" placeholder="Cari novel, penulis, atau bab"
              value="{{ q|default('') }}" aria-label="Cari" autocomplete="off">
-      <button type="submit" aria-label="Cari">Cari</button>
     </form>
     <nav class="nav-atas">
       <a href="/jelajah">Jelajah</a>
-      <a href="/jelajah?order=baru">Terbaru</a>
-      <a href="/jelajah">Genre</a>
-      <a class="tombol-apk" href="/apk">Unduh APK</a>
+      <a class="tombol-apk" href="/apk">APK</a>
     </nav>
   </div>
 </header>
 
-<main class="wadah">
 {% block isi %}{% endblock %}
-</main>
 
 <footer class="kaki">
   <div class="wadah kaki-dalam">
     <div>
       <b>{{ nama }}</b>
-      <span class="redup">Arsip pribadi novel terjemahan · {{ total_novel|default('') }} novel · {{ total_bab|default('') }} bab</span>
+      <span class="redup">Arsip pribadi novel terjemahan · {{ total_novel|default('') }} novel · {{ total_bab|default('') }} bab. Semua bab disimpan di server sendiri.</span>
     </div>
     <div class="kaki-tautan">
       <a href="/jelajah">Jelajah</a>
-      <a href="/jelajah">Genre</a>
+      <a href="/jelajah?order=rating">Rating</a>
+      <a href="/jelajah?order=baru">Terbaru</a>
+      <a href="/apk">Unduh APK</a>
       <a href="/sitemap.xml">Sitemap</a>
       <a href="/status">Status</a>
-      <a href="/apk">APK</a>
     </div>
   </div>
-  <div class="kaki-bawah">© {{ nama }} · Arsip Pribadi · Semua Bab Disimpan Mandiri</div>
+  <div class="kaki-bawah">© {{ nama }} · {{ total_novel|default('') }} novel · {{ total_bab|default('') }} bab</div>
 </footer>
 
-{# nav bawah "notch" (gaya Miruro) — aktif otomatis dari path halaman #}
 <nav class="notch-nav" aria-label="Navigasi bawah">
   <a href="/"{% if halaman == 'beranda' %} aria-current="page"{% endif %}>
-    <span class="notch-ikon">⌂</span><span class="notch-label">Beranda</span>
+    <span class="notch-ikon" aria-hidden="true">⌂</span><span class="notch-label">Home</span>
   </a>
-  <a href="/jelajah"{% if halaman == 'jelajah' %} aria-current="page"{% endif %}>
-    <span class="notch-ikon">◎</span><span class="notch-label">Jelajah</span>
+  <a href="/jelajah"{% if halaman in ('jelajah','genre','tag','daftar','cari') %} aria-current="page"{% endif %}>
+    <span class="notch-ikon" aria-hidden="true">◎</span><span class="notch-label">Jelajah</span>
   </a>
-  <a href="/jelajah?order=update"{% if halaman == 'update' %} aria-current="page"{% endif %}>
-    <span class="notch-ikon">↻</span><span class="notch-label">Terbaru</span>
+  <a href="/pustaka"{% if halaman == 'pustaka' %} aria-current="page"{% endif %}>
+    <span class="notch-ikon" aria-hidden="true">▤</span><span class="notch-label">Pustaka</span>
   </a>
-  <a href="/apk"{% if halaman == 'apk' %} aria-current="page"{% endif %}>
-    <span class="notch-ikon">↓</span><span class="notch-label">APK</span>
+  <a href="/profil"{% if halaman == 'profil' %} aria-current="page"{% endif %}>
+    <span class="notch-ikon" aria-hidden="true">☺</span><span class="notch-label">Profil</span>
   </a>
 </nav>
-<script src="/static/web.js" defer></script>
 </body>
 </html>
