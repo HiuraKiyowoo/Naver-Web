@@ -34,7 +34,7 @@
 <div class="wadah">
 
 {# ── SECTION pembantu (gaya Miruro: judul uppercase + panah) ── #}
-{% macro bagian(judul, sub, tautan, id, daftar, lencana='rating') %}
+{% macro bagian(judul, sub, tautan, id, daftar, lencana='rating', rak2=False, bernomor=False) %}
 {% if daftar %}
 <section class="bagian">
   <div class="bagian-kepala">
@@ -47,14 +47,16 @@
       <button type="button" data-geser="kanan" data-rak="{{ id }}" aria-label="Berikutnya">›</button>
     </div>
   </div>
-  <div class="rak" id="{{ id }}">
-    {% for n in daftar %}{% include "_kartu.html" %}{% endfor %}
+  <div class="{{ 'rak2' if rak2 else 'rak' }}" id="{{ id }}">
+    {% for n in daftar %}
+      {% if bernomor %}{% include "_kartu_nomor.html" %}{% else %}{% include "_kartu.html" %}{% endif %}
+    {% endfor %}
   </div>
 </section>
 {% endif %}
 {% endmacro %}
 
-{{ bagian('Update Terbaru', 'Bab paling baru masuk', '/jelajah?order=update', 'r4', update, 'bab') }}
+{{ bagian('Update Terbaru', 'Bab paling baru masuk', '/jelajah?order=update', 'r4', update, 'bab', rak2=True, bernomor=True) }}
 {{ bagian('Rating Tertinggi', 'Nilai 4.2 ke atas dari pembaca', '/jelajah?order=rating', 'r2', premium, 'rating') }}
 {{ bagian('Baru Ditambahkan', 'Terakhir masuk arsip', '/jelajah?order=baru', 'r3', baru, 'status') }}
 {{ bagian('Masih Jalan', 'Belum tamat, masih berlanjut', '/jelajah?status=ongoing', 'r5b', ongoing, 'status') }}

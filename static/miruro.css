@@ -68,6 +68,23 @@ img { display: block; }
 .nav-atas a.tombol-apk { background: var(--cyan); color: #0A0E13; }
 .nav-atas a.tombol-apk:hover { background: var(--cyan2); color: #0A0E13; }
 
+/* ── daftar bernomor 2 KOLOM (khusus section Update Terbaru) ──
+   ⚠️ WAJIB 2 kolom di semua ukuran (desktop/tablet/HP).
+   Di HP: kartu, cover, jarak & teks DIPERKECIL — JANGAN jadi 1 kolom. */
+.rak2 { display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 8px; padding: 0 8px 14px; }
+.rak2 .kartu { width: 100%; flex-direction: row; align-items: center; gap: 10px; }
+.rak2 .kartu-cover { width: 46px; flex: 0 0 46px; aspect-ratio: 2/3;
+  border-radius: 4px; box-shadow: 0 6px 16px rgba(0,0,0,.45); }
+.rak2 .kartu:hover .kartu-cover img { transform: none; }
+.rak2 .kartu-judul { font-size: 10.5px; -webkit-line-clamp: 2; flex: 1;
+  color: rgba(255,255,255,.72); }
+.rak2 .no { flex: 0 0 17px; font-size: 12px; font-weight: 900;
+  color: var(--cyan); text-align: right; font-variant-numeric: tabular-nums; }
+.rak2 .lencana, .rak2 .kartu-tipe { display: none; }
+.rak2 .kartu-meta { display: block; font-size: 9px; font-weight: 800;
+  color: var(--samar); margin-top: 3px; }
+
 /* ── kotak cari BESAR (di halaman Jelajah) ── */
 .cari-besar { display: flex; align-items: center; gap: 12px; height: 52px;
   padding: 0 8px 0 20px; border-radius: 14px; margin: 0 8px 20px;
@@ -433,4 +450,11 @@ img { display: block; }
   .baca h1 { font-size: 19px; }
   .baca-isi { font-size: 15px; line-height: 1.9; }
   .panel { padding: 16px; }
+  /* daftar bernomor: TETAP 2 kolom, cuma dikecilkan */
+  .rak2 { gap: 6px; padding: 0 6px 12px; }
+  .rak2 .kartu { gap: 7px; }
+  .rak2 .kartu-cover { width: 38px; flex: 0 0 38px; }
+  .rak2 .no { flex: 0 0 14px; font-size: 11px; }
+  .rak2 .kartu-judul { font-size: 9.5px; }
+  .rak2 .kartu-meta { font-size: 8px; }
 }

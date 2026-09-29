@@ -179,6 +179,10 @@ def beranda(request: Request):
         k = kartu(r)
         k["tanggal"] = (r["tg"] or "")[:10]
         k["c_bab"] = r["jumlah_bab"]
+        # nomor urut 1..12 — dipakai templat daftar 2 kolom (beranda.html).
+        # ⚠️ JANGAN hitung di Jinja: `dict()` & `list.append()` TIDAK ada di
+        #    Jinja → nomor keluar KOSONG (pelajaran 29 Sep).
+        k["no"] = len(update) + 1
         update.append(k)
         if len(update) >= 12:
             break
