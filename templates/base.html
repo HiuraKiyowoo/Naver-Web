@@ -19,8 +19,13 @@
    otomatis ambil yang baru (pelajaran 28 Sep: CF cache 4 jam bikin CSS basi) #}
 <link rel="preload" href="/static/web.css?v={{ versi_aset() }}" as="style">
 <link rel="stylesheet" href="/static/web.css?v={{ versi_aset() }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700;800;900&display=swap">
 {# lapisan gaya MENIRU novelpia (dipasang SETELAH web.css supaya menimpa) #}
 <link rel="stylesheet" href="/static/tema-novelpia.css?v={{ versi_aset() }}">
+{# lapisan gaya Miruro (paling akhir = paling menang). Dibuat 29 Sep 2026 #}
+<link rel="stylesheet" href="/static/miruro.css?v={{ versi_aset() }}">
 </head>
 <body>
 <header class="kepala">
@@ -61,7 +66,24 @@
       <a href="/apk">APK</a>
     </div>
   </div>
+  <div class="kaki-bawah">© {{ nama }} · Arsip Pribadi · Semua Bab Disimpan Mandiri</div>
 </footer>
+
+{# nav bawah "notch" (gaya Miruro) — aktif otomatis dari path halaman #}
+<nav class="notch-nav" aria-label="Navigasi bawah">
+  <a href="/"{% if halaman == 'beranda' %} aria-current="page"{% endif %}>
+    <span class="notch-ikon">⌂</span><span class="notch-label">Beranda</span>
+  </a>
+  <a href="/jelajah"{% if halaman == 'jelajah' %} aria-current="page"{% endif %}>
+    <span class="notch-ikon">◎</span><span class="notch-label">Jelajah</span>
+  </a>
+  <a href="/jelajah?order=update"{% if halaman == 'update' %} aria-current="page"{% endif %}>
+    <span class="notch-ikon">↻</span><span class="notch-label">Terbaru</span>
+  </a>
+  <a href="/apk"{% if halaman == 'apk' %} aria-current="page"{% endif %}>
+    <span class="notch-ikon">↓</span><span class="notch-label">APK</span>
+  </a>
+</nav>
 <script src="/static/web.js" defer></script>
 </body>
 </html>

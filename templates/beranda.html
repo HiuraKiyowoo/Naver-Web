@@ -3,11 +3,13 @@
 
 {% block isi %}
 
-{# ── 1. HERO — Sorotan (gaya novelpia: label gradien + judul + sinopsis) ── #}
+{# ── 1. HERO — gaya Miruro: banner 16:9 + cover 2:3 di kanan ── #}
 {% if hero %}
 {% set h = hero[0] %}
 <section class="hero">
   <div class="hero-isi">
+    {% if h.cover %}<img class="hero-banner" src="{{ h.cover }}" alt="" aria-hidden="true">{% endif %}
+    <div class="hero-grad"></div>
     <div class="hero-kiri">
       <span class="hero-label"><i></i>SOROTAN PEKAN INI</span>
       <h1 class="hero-judul">{{ h.judul }}</h1>
@@ -24,9 +26,7 @@
       </div>
     </div>
     <div class="hero-kanan">
-      {% if hero|length > 1 %}<div class="tumpuk t2"><img src="{{ hero[1].cover }}" alt="" loading="lazy"></div>{% endif %}
-      {% if hero|length > 2 %}<div class="tumpuk t3"><img src="{{ hero[2].cover }}" alt="" loading="lazy"></div>{% endif %}
-      <div class="tumpuk t1"><img src="{{ h.cover }}" alt="Cover {{ h.judul }}"></div>
+      {% if h.cover %}<img class="hero-cover" src="{{ h.cover }}" alt="Cover {{ h.judul }}">{% endif %}
     </div>
   </div>
 </section>

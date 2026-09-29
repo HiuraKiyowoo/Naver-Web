@@ -1,6 +1,6 @@
-{# Kartu novel — dipakai di rak & grid.
-   Bentuk MENIRU novelpia: cover rasio 2:3, judul & angka DI ATAS cover
-   dengan gradien gelap. Tag = status novel (Ongoing/Tamat), jujur dari dB. #}
+{# Kartu novel — gaya Miruro: cover 2:3, badge kiri-atas, pil status,
+   judul & meta di bawah cover dengan gradien gelap.
+   Seluruh isi diambil dari field milik kita (n.url/n.cover/n.rating/...). #}
 <a class="kartu" href="{{ n.url }}">
   <div class="kartu-cover">
     {% if n.cover %}<img src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">

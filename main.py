@@ -181,7 +181,7 @@ def beranda(request: Request):
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
         "ORDER BY id DESC LIMIT 12")]
     return tpl.TemplateResponse(request, "beranda.html", {
-        "situs": SITUS, "nama": NAMA, "desk": DESK,
+        "situs": SITUS, "halaman": "beranda", "nama": NAMA, "desk": DESK,
         "kanon": str(request.url), "total_novel": n, "total_bab": b,
         "hero": hero, "trending": trending, "acak": acak, "baru": baru,
         "update": update, "tamat": tamat, "ongoing": ongoing,
@@ -213,7 +213,7 @@ def novel(request: Request, slug: str):
           AND n.id<>? AND n.cover_webp IS NOT NULL
         ORDER BY n.jumlah_bab DESC LIMIT 12""", (r["id"], r["id"]))]
     return tpl.TemplateResponse(request, "novel.html", {
-        "situs": SITUS, "nama": NAMA,
+        "situs": SITUS, "halaman": "novel", "nama": NAMA,
         "judul": f"{r['judul']}: {NAMA}",
         "desk": (r["sinopsis"] or DESK)[:160],
         "kanon": f"{SITUS}/novel/{slug}",
@@ -251,7 +251,7 @@ def bab(request: Request, slug: str, urutan: int):
     teks = (b["teks"] or "").split("\n")
     ada_teks = bool((b["teks"] or "").strip())
     return tpl.TemplateResponse(request, "bab.html", {
-        "situs": SITUS, "nama": NAMA,
+        "situs": SITUS, "halaman": "bab", "nama": NAMA,
         "judul": f"{b['judul']}: {n['judul']} | {NAMA}",
         "desk": (b["teks"] or "")[:150],
         "kanon": f"{SITUS}/novel/{slug}/bab/{urutan}",
@@ -298,7 +298,7 @@ def jelajah(request: Request,
     t_list = [dict(x) for x in ambil(
         "SELECT slug, nama, jumlah_novel FROM tag ORDER BY jumlah_novel DESC LIMIT 60")]
     return tpl.TemplateResponse(request, "jelajah.html", {
-        "situs": SITUS, "nama": NAMA,
+        "situs": SITUS, "halaman": "jelajah", "nama": NAMA,
         "judul": f"Jelajah Novel: {NAMA}", "desk": DESK,
         "kanon": f"{SITUS}/jelajah",
         "hasil": [kartu(x) for x in baris], "total": total,
@@ -321,7 +321,7 @@ def genre(request: Request, slug: str, page: int = 1, per: int = 24):
         ORDER BY n.jumlah_bab DESC LIMIT ? OFFSET ?""",
                   (g["id"], per, (page - 1) * per))
     return tpl.TemplateResponse(request, "daftar.html", {
-        "situs": SITUS, "nama": NAMA,
+        "situs": SITUS, "halaman": "daftar", "nama": NAMA,
         "judul": f"Genre {g['nama']}: {NAMA}", "desk": f"Novel genre {g['nama']}.",
         "kanon": f"{SITUS}/genre/{slug}",
         "kepala": f"Genre: {g['nama']}", "hasil": [kartu(x) for x in baris],
@@ -342,7 +342,7 @@ def tag(request: Request, slug: str, page: int = 1, per: int = 24):
         ORDER BY n.jumlah_bab DESC LIMIT ? OFFSET ?""",
                   (t["id"], per, (page - 1) * per))
     return tpl.TemplateResponse(request, "daftar.html", {
-        "situs": SITUS, "nama": NAMA,
+        "situs": SITUS, "halaman": "daftar", "nama": NAMA,
         "judul": f"Tag {t['nama']}: {NAMA}", "desk": f"Novel dengan tag {t['nama']}.",
         "kanon": f"{SITUS}/tag/{slug}",
         "kepala": f"Tag: {t['nama']}", "hasil": [kartu(x) for x in baris],
@@ -371,7 +371,7 @@ def cari(request: Request, q: str = "", page: int = 1, per: int = 24):
         except sqlite3.Error:
             bab_hits = []
     return tpl.TemplateResponse(request, "cari.html", {
-        "situs": SITUS, "nama": NAMA,
+        "situs": SITUS, "halaman": "cari", "nama": NAMA,
         "judul": f"Cari {q}: {NAMA}", "desk": DESK,
         "kanon": f"{SITUS}/cari?q={q}",
         "q": q, "hasil": hasil, "total": total, "bab_hits": bab_hits,
@@ -495,7 +495,7 @@ def apk(request: Request):
     n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
     b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
     return tpl.TemplateResponse(request, "apk.html", {
-        "situs": SITUS, "nama": NAMA,
+        "situs": SITUS, "halaman": "apk", "nama": NAMA,
         "judul": f"Unduh APK: {NAMA}",
         "desk": "Unduh aplikasi Android Naver Novel untuk baca offline.",
         "kanon": f"{SITUS}/apk",
@@ -512,7 +512,7 @@ def apk(request: Request):
 def _hal_galat(request: Request, kode: int, pesan: str, rinci: str):
     q = request.query_params.get("q", "")
     return tpl.TemplateResponse(request, "galat.html", {
-        "situs": SITUS, "nama": NAMA, "kanon": str(request.url),
+        "situs": SITUS, "halaman": "galat", "nama": NAMA, "kanon": str(request.url),
         "judul": f"{kode}: {pesan} | {NAMA}",
         "desk": rinci,
         "kode": kode, "pesan": pesan, "rinci": rinci, "q": q,
