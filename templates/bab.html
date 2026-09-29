@@ -57,8 +57,8 @@
     {% endif %}
     <a href="/novel/{{ n.slug }}">Daftar Bab</a>
     {% if sesudah %}
-    <a href="/novel/{{ n.slug }}/bab/{{ sesudah }}">Berikutnya →</a>
-    {% endif %}
+{% if (not pengguna) and (sesudah > batas_bab) %}<a class="nav-terkunci" href="/novel/{{ n.slug }}/bab/{{ sesudah }}"><span class="gkunci" title="Perlu masuk">{% include "_gembok.html" %}</span> Bab Berikutnya</a>{% else %}<a href="/novel/{{ n.slug }}/bab/{{ sesudah }}">Berikutnya →</a>{% endif %}
+{% endif %}
   </div>
 
   {# ── daftar bab ringkas ── #}
@@ -66,13 +66,13 @@
     <div class="panel-kepala"><h3>Bab Lain</h3></div>
     <div class="bab-daftar">
       {% for x in semua_bab %}
-      <a class="bab-item{% if x.urutan == b.urutan %} terakhir{% endif %}"
-         href="/novel/{{ n.slug }}/bab/{{ x.urutan }}">
+<a class="bab-item{% if x.urutan == b.urutan %} terakhir{% endif %}{% if (not pengguna) and (x.urutan > batas_bab) %} bab-terkunci{% endif %}"
+           href="/novel/{{ n.slug }}/bab/{{ x.urutan }}">
         <span class="bab-kiri">
           <span class="bab-no">Bab {{ x.nomor or x.urutan }}</span>
           <span class="bab-judul">{{ x.judul }}</span>
         </span>
-        <span class="bab-kanan">›</span>
+        <span class="bab-kanan">{% if (not pengguna) and (x.urutan > batas_bab) %}<span class="gkunci" title="Perlu masuk" aria-label="Terkunci">{% include "_gembok.html" %}</span>{% else %}›{% endif %}</span>
       </a>
       {% endfor %}
     </div>

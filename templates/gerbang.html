@@ -4,11 +4,11 @@
 {% block isi %}
 <div class="wadah">
   <div class="gerbang">
-    <div class="gerbang-ikon" aria-hidden="true">🔒</div>
-    <h2>Sudah habis 3 bab gratis</h2>
+    <div class="gerbang-ikon" aria-hidden="true">{% include "_gembok.html" %}</div>
+    <h2>Bab 1–{{ batas }} bebas · Bab {{ batas + 1 }} ke atas perlu masuk</h2>
     <p>
-      Di tiap novel, <b>bab 1–{{ batas }} bisa dibaca tanpa akun</b>.<br>
-      Untuk <b>{{ n.judul }}</b> kamu sudah memakai jatah itu — masuk dulu untuk lanjut ke <b>Bab {{ urutan }}</b>.
+      Di setiap novel, <b>bab 1–{{ batas }} bebas dibaca tanpa akun</b> — mau dibaca berapa kali pun.<br>
+      <b>Bab {{ batas + 1 }}</b> ke atas perlu akun. Untuk lanjut ke <b>Bab {{ urutan }}</b> di <b>{{ n.judul }}</b>, masuk dulu ya.
     </p>
 
     <div class="gerbang-aksi">

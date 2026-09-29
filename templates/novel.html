@@ -70,12 +70,13 @@
     </div>
     <div class="bab-daftar">
       {% for b in bab|reverse %}
-      <a class="bab-item" href="/novel/{{ n.slug }}/bab/{{ b.urutan }}">
+      {% set kunci = (not pengguna) and (b.urutan > batas_bab) %}
+      <a class="bab-item{% if kunci %} bab-terkunci{% endif %}" href="/novel/{{ n.slug }}/bab/{{ b.urutan }}">
         <span class="bab-kiri">
           <span class="bab-no">Bab {{ b.nomor or b.urutan }}</span>
           <span class="bab-judul">{{ b.judul }}</span>
         </span>
-        <span class="bab-kanan">›</span>
+        <span class="bab-kanan">{% if kunci %}<span class="gkunci" title="Perlu masuk untuk membaca" aria-label="Terkunci">{% include "_gembok.html" %}</span>{% else %}›{% endif %}</span>
       </a>
       {% endfor %}
     </div>

@@ -333,7 +333,7 @@ def novel(request: Request, slug: str):
           AND n.id<>? AND n.cover_webp IS NOT NULL
         ORDER BY n.jumlah_bab DESC LIMIT 12""", (r["id"], r["id"]))]
     return tpl.TemplateResponse(request, "novel.html", {
-        "situs": SITUS, "halaman": "novel", "nama": NAMA,
+        "situs": SITUS, "halaman": "novel", "batas_bab": auth.BATAS_TAMU, "nama": NAMA,
         "judul": f"{r['judul']}: {NAMA}",
         "desk": (r["sinopsis"] or DESK)[:160],
         "kanon": f"{SITUS}/novel/{slug}",
@@ -341,6 +341,7 @@ def novel(request: Request, slug: str):
         "n": dict(r), "cover": f"/cover/{r['id']}.webp" if r["cover_webp"] else None,
         "genre": genre, "tag": tag, "bab": bab, "serupa": serupa,
         "jlh_bab": len(bab),
+        "pengguna": getattr(request.state, "pengguna", None),
     })
 
 
@@ -367,7 +368,7 @@ def bab(request: Request, slug: str, urutan: int):
             "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan LIMIT ?",
             (n["id"], auth.BATAS_TAMU))]
         return tpl.TemplateResponse(request, "gerbang.html", {
-            "situs": SITUS, "halaman": "bab", "nama": NAMA,
+            "situs": SITUS, "halaman": "bab", "batas_bab": auth.BATAS_TAMU, "nama": NAMA,
             "judul": "Wajib Masuk: " + n["judul"] + " | " + NAMA,
             "desk": "Bab 1-" + str(auth.BATAS_TAMU) + " bebas dibaca. Masuk untuk lanjut.",
             "kanon": SITUS + "/novel/" + slug + "/bab/" + str(urutan),
@@ -395,7 +396,7 @@ def bab(request: Request, slug: str, urutan: int):
         "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan",
         (n["id"],))]
     return tpl.TemplateResponse(request, "bab.html", {
-        "situs": SITUS, "halaman": "bab", "nama": NAMA,
+        "situs": SITUS, "halaman": "bab", "batas_bab": auth.BATAS_TAMU, "nama": NAMA,
         "judul": f"{b['judul']}: {n['judul']} | {NAMA}",
         "desk": (b["teks"] or "")[:150],
         "kanon": f"{SITUS}/novel/{slug}/bab/{urutan}",
