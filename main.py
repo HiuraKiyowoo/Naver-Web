@@ -150,6 +150,17 @@ def beranda(request: Request):
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
         "AND LOWER(COALESCE(country,'')) LIKE '%korea%' "
         "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
+    # WEB NOVEL / LIGHT NOVEL — tipe nyata dari dB (web 320 · light 149).
+    # ⚠️ JANGAN hapus lagi: user menegur 29 Sep ("Web Novel sama Light Novel
+    #    malah di ganti") — yang diminta buang HANYA Paling Panjang & Bergambar.
+    light = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "AND LOWER(COALESCE(tipe,'')) LIKE '%light%' "
+        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
+    webnovel = [kartu(r) for r in ambil(
+        "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "
+        "AND LOWER(COALESCE(tipe,'')) LIKE '%web%' "
+        "ORDER BY COALESCE(rating,0) DESC, jumlah_bab DESC LIMIT 12")]
     # RANDOM: tetap sama tiap hari (seed tanggal) supaya tidak berkedip saat reload
     seed = int(time.strftime("%Y%m%d"))
     acak = [kartu(r) for r in ambil(
@@ -211,6 +222,7 @@ def beranda(request: Request):
         "update": update, "tamat": tamat, "ongoing": ongoing,
         "genre": genre, "tag": tag, "premium": premium,
         "jepang": jepang, "korea": korea,
+        "light": light, "webnovel": webnovel,
     })
 
 
