@@ -324,15 +324,15 @@
 
 
 /* ══════════════════════════════════════════════════════════
-   POP-UP GERBANG: naik dari bawah + tirai blur
+   POP-UP LOGIN: naik dari bawah, TANPA tirai gelap
+   (halaman tetap seperti biasa, isi bab hanya diburamkan)
    (bab di atas batas, pengunjung belum login)
    ══════════════════════════════════════════════════════════ */
 (function(){
   var pop = document.getElementById('popupGerbang');
   if (!pop) return;
-  var tir = document.getElementById('tiraiBlur');
   var tut = document.getElementById('pgTutup');
-  var kunciScroll = false;
+  document.body.classList.add('popup-ada');
 
   function buka(){
     requestAnimationFrame(function(){

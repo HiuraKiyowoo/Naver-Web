@@ -1,34 +1,27 @@
 {% extends "base.html" %}
 {% block judul %}{{ judul }}
-{# ══ POP-UP GERBANG (naik dari bawah) — bab di atas batas, belum login ══ #}
+
+
+{# ══ POP-UP LOGIN (naik dari bawah) — TANPA tirai gelap ══ #}
 {% if gerbang_dasar %}
-<div class="tirai-blur" id="tiraiBlur" aria-hidden="true"></div>
-
 <div class="popup-naik" id="popupGerbang" role="dialog" aria-modal="true"
-     aria-labelledby="pgJudul" aria-describedby="pgDesk">
+     aria-labelledby="pgJudul">
   <div class="pg-gagang" aria-hidden="true"></div>
-
   <div class="pg-kepala">
     <span class="pg-gembok" aria-hidden="true">{% include "_gembok.html" %}</span>
     <div>
       <h3 id="pgJudul">Lanjut baca perlu akun</h3>
-      <p id="pgDesk">
-        Di tiap novel, <b>bab 1–{{ batas_bab }} bebas</b> — mau dibaca berapa kali pun.
-        <b>Bab {{ batas_bab + 1 }}</b> ke atas perlu masuk.
-      </p>
+      <p>Di tiap novel, <b>bab 1–{{ batas_bab }} bebas</b> — mau dibaca berapa kali pun.
+         <b>Bab {{ batas_bab + 1 }}</b> ke atas perlu masuk.</p>
     </div>
   </div>
-
   <div class="pg-isi">
     <div class="pg-baris"><b>{{ n.judul|truncate(46, true, '…') }}</b>
       <span>Bab {{ b.nomor or b.urutan }} sedang dikunci</span></div>
-
     <div class="pg-aksi">
-      <a class="tombol tombol-utama pg-lebar" href="/masuk?lanjut={{ (kanon | urlencode) }}">
-        Masuk / Daftar</a>
+      <a class="tombol tombol-utama pg-lebar" href="/masuk?lanjut={{ (kanon | urlencode) }}">Masuk / Daftar</a>
       <a class="tombol tombol-abu pg-lebar" href="/novel/{{ n.slug }}">Kembali ke detail</a>
     </div>
-
     {% if bab_awal %}
     <div class="pg-petunjuk">
       <span>Masih bebas dibaca:</span>
@@ -38,8 +31,7 @@
       </div>
     </div>
     {% endif %}
-
-    <button type="button" class="pg-tutup" id="pgTutup">Nanti saja</button>
+    <button type="button" class="pg-tutup" id="pgTutup">Tutup</button>
   </div>
 </div>
 {% endif %}
