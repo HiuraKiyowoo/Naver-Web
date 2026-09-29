@@ -1079,3 +1079,41 @@ a.hal-angka-item:hover{ background:rgba(4,157,253,.16); color:#DFF0FF; }
   .stat-petak{ grid-template-columns:1fr; }
   .hal-nav{ justify-content:center; }
 }
+
+/* ═══════════ PANEL ADMIN (rahasia) ═══════════ */
+.panel-awas{margin:18px 0;padding:14px 16px;border-radius:14px;font-size:13.5px;line-height:1.55;
+  color:#cfe9ff;background:rgba(4,157,253,.10);border:1px solid rgba(4,157,253,.34)}
+.panel-bagian{margin:30px 0}
+.panel-judul{margin:0 0 14px;font-size:17px;font-weight:650;letter-spacing:-.01em;
+  color:var(--teks,#e8eef5);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.panel-jam{font-size:12px;font-weight:400;color:var(--teks-lemah,#8b9bb0)}
+.panel-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.panel-angka{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(128px,1fr))}
+.panel-kartu,.panel-kotak{padding:16px 14px;border-radius:14px;background:var(--kartu,#0f1a24);
+  border:1px solid var(--garis,#1d2a36);display:flex;flex-direction:column;gap:5px}
+.panel-kartu b,.panel-kotak b{font-size:19px;font-weight:680;letter-spacing:-.02em;color:#e8eef5}
+.panel-kotak b{font-size:23px}
+.panel-kartu span,.panel-kotak span{font-size:12px;color:#8b9bb0;line-height:1.35}
+.panel-ok{border-color:rgba(52,199,123,.42);background:rgba(52,199,123,.07)}
+.panel-ok b{color:#5fd39a}
+.panel-mati{border-color:rgba(240,90,90,.45);background:rgba(240,90,90,.08)}
+.panel-mati b{color:#ff8080}
+.panel-awas{border-color:rgba(240,190,80,.42);background:rgba(240,190,80,.07)}
+.panel-awas b{color:#ffcf70}
+.panel-tabel{overflow-x:auto;border-radius:14px;border:1px solid var(--garis,#1d2a36);background:var(--kartu,#0f1a24)}
+.panel-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.panel-tbl th{text-align:left;padding:11px 14px;font-weight:600;font-size:11.5px;letter-spacing:.04em;
+  text-transform:uppercase;color:#8b9bb0;border-bottom:1px solid var(--garis,#1d2a36)}
+.panel-tbl td{padding:10px 14px;border-bottom:1px solid rgba(29,42,54,.5);color:#cdd9e5}
+.panel-tbl tr:last-child td{border-bottom:0}
+.panel-tbl a{color:#38bdf8;text-decoration:none}
+.panel-tbl a:hover{text-decoration:underline}
+.panel-muat{padding:16px 14px;display:block;font-size:13px;color:#8b9bb0}
+.panel-tombol{display:flex;gap:12px;flex-wrap:wrap;margin:34px 0 40px}
+.laci-admin{color:#7dd3fc !important}
+.laci-admin .laci-ikon{color:#7dd3fc}
+@media(max-width:560px){
+  .panel-kotak b{font-size:20px}
+  .panel-kartu b{font-size:17px}
+  .panel-tbl th,.panel-tbl td{padding:9px 10px;font-size:12px}
+}

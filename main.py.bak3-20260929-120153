@@ -52,7 +52,6 @@ except Exception:
     pass
 
 import auth
-import admin
 import time
 from pathlib import Path
 
@@ -105,70 +104,6 @@ if COVER.exists():
 app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
 tpl = Jinja2Templates(directory=str(BASE / "templates"))
 
-
-
-
-# ═══════════ PANEL ADMIN (rahasia) ═══════════
-# Pembungkus tipis: setiap render template otomatis mendapat 'admin' True/False,
-# supaya base.html bisa memakai {% if admin %} tanpa mengubah route satu per satu.
-_TR_ASLI = tpl.TemplateResponse
-
-# Admin bawaan (dipakai kalau env NAVER_ADMIN_EMAIL kosong)
-_ADMIN_EMAIL = [x.strip().lower() for x in
-                (os.environ.get("NAVER_ADMIN_EMAIL") or "hiura0012@gmail.com").split(",") if x.strip()]
-
-
-def _admin_masuk(req) -> bool:
-    """True kalau pengguna pada request ini emailnya termasuk admin."""
-    try:
-        p = getattr(getattr(req, "state", None), "pengguna", None)
-        if not p:
-            return False
-        email = (p["email"] if not isinstance(p, dict) else p.get("email")) or ""
-        return email.strip().lower() in _ADMIN_EMAIL
-    except Exception:
-        return False
-
-
-def _TR(*a, **k):
-    """Sisipkan admin=True/False ke konteks SEBELUM render.
-
-    Bentuk yang didukung:
-      (request, "x.html", {…})      ← bentuk baru (dipakai main.py)
-      ("x.html", {"request": …})    ← bentuk lama
-      (request, "x.html")           ← tanpa konteks
-    """
-    # 1. temukan request
-    req = None
-    if a and hasattr(a[0], "state"):
-        req = a[0]
-
-    # 2. temukan dict konteks (bukan request)
-    idk = None
-    for i, x in enumerate(a):
-        if isinstance(x, dict) and not hasattr(x, "state"):
-            idk = i
-            break
-    if idk is None and isinstance(k.get("context"), dict):
-        idk = -1
-
-    if req is None and idk is not None and idk >= 0:
-        req = a[idk].get("request")
-
-    nilai = bool(_admin_masuk(req))
-
-    if idk == -1:
-        k = {**k, "context": {**k["context"], "admin": nilai}}
-    elif idk is not None:
-        a = a[:idk] + ({**a[idk], "admin": nilai},) + a[idk + 1:]
-    elif len(a) >= 2:
-        a = (a[0], {"request": req, "admin": nilai}) + a[1:]
-
-    return _TR_ASLI(*a, **k)
-
-
-tpl.TemplateResponse = _TR
-# ═══════════════════════════════════════════════
 
 @app.middleware("http")
 async def atur_cache(request, call_next):
@@ -1243,7 +1178,3 @@ async def galat_500(request: Request, exc):
         request, 500, "Ada gangguan di server",
         "Server sedang bermasalah saat memuat halaman ini. "
         "Coba muat ulang sebentar lagi; kalau tetap gagal, kembali ke beranda.")
-
-
-# ── route /panel + /api/panel/status (modul terpisah web/admin.py) ──
-admin.daftarkan(app, lambda req: getattr(getattr(req, "state", None), "pengguna", None), tpl)
