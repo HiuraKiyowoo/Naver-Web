@@ -127,12 +127,28 @@
     }
 
     if ('IntersectionObserver' in window) {
+      /* ⚠️ Pelajaran 29 Sep: threshold 0.25 bikin animasi sering TIDAK jalan
+         (perlu 25% .fan terlihat) → section kelihatan KOSONG. Sekarang:
+         threshold kecil + rootMargin bawah 15% supaya animasi mulai tepat
+         saat kipas mau masuk layar. */
       var amat = new IntersectionObserver(function (masuk) {
         masuk.forEach(function (m) {
           if (m.isIntersecting) { mekar(); amat.disconnect(); }
         });
-      }, { threshold: 0.25 });
+      }, { threshold: 0.05, rootMargin: '0px 0px -8% 0px' });
       amat.observe(kipas);
+
+      /* PENGAMAN: kalau karena apa pun animasi belum jalan dalam 2,5 dtk
+         setelah pengamat dipasang DAN kipas sudah masuk layar, paksa mekar.
+         (mencegah section kosong permanen) */
+      setTimeout(function () {
+        var r = kipas.getBoundingClientRect();
+        if (!kipas.classList.contains('kipas-mekar') &&
+            r.top < window.innerHeight && r.bottom > 0) {
+          mekar();
+          amat.disconnect();
+        }
+      }, 2500);
     } else {
       mekar();
     }
