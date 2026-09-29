@@ -2,6 +2,28 @@
    web.js — perilaku halaman gaya Miruro (tanpa framework)
    ═══════════════════════════════════════════════════════════ */
 (function () {
+/* ── baca balasan dengan AMAN ──
+   Kalau server membalas HTML (halaman galat / gerbang / 502 Cloudflare),
+   jangan panggil .json() langsung — nanti muncul
+   "Unexpected token '<', "<!DOCTYPE"..." yang membingungkan.
+   Fungsi ini mengembalikan objek { ok, pesan, lanjut } yang selalu bisa dibaca. */
+function bacaBalasan(r) {
+  var ct = (r.headers && r.headers.get('content-type')) || '';
+  if (ct.indexOf('application/json') >= 0) {
+    return r.json().catch(function () {
+      return { ok: false, pesan: 'Balasan server rusak (JSON tidak sah).' };
+    });
+  }
+  return r.text().then(function (t) {
+    return {
+      ok: false,
+      pesan: (r.status === 502 || r.status === 503 || r.status === 504)
+        ? 'Server sedang tidak siap (' + r.status + '). Coba lagi sebentar.'
+        : 'Server membalas halaman, bukan data (' + r.status + '). Coba muat ulang.'
+    };
+  });
+}
+
   'use strict';
 
   /* ── 1. HERO CAROUSEL: kartu tengah membesar, samping mengecil ── */
@@ -365,7 +387,7 @@
         location.href = '/masuk?lanjut=' + lanjut;
         return null;
       }
-      return r.json();
+      return bacaBalasan(r);
     }).then(function(d){
       if (d && d.ok) pasang(d.favorit);
       sibuk = false;
@@ -417,7 +439,7 @@
       })
     }).then(function(r){
       if (r.status === 401){ location.href = '/masuk?lanjut=/request'; return null; }
-      return r.json();
+      return bacaBalasan(r);
     }).then(function(d){
       sibuk = false;
       tombol.disabled = false;
