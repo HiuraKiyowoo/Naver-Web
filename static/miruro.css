@@ -47,7 +47,20 @@ img { display: block; }
 
 /* ── kepala (nempel di atas, TIDAK melayang) ── */
 .kepala { position: sticky; top: 0; z-index: 100;
-  padding: 0; background: #12151A; border-bottom: 1px solid var(--garis); }
+  padding: 0; background: transparent; border-bottom: 1px solid transparent;
+  transition: background .28s ease, border-color .28s ease, box-shadow .28s ease; }
+/* saat discroll → kaca gelap + blur (ditambah oleh web.js lewat class .kepala-gulir) */
+.kepala.kepala-gulir {
+  background: rgba(10, 14, 20, .72);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border-bottom-color: rgba(160, 200, 240, .10);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .45);
+}
+/* pengaman: browser tanpa backdrop-filter → tetap gelap solid */
+@supports not (backdrop-filter: blur(2px)) {
+  .kepala.kepala-gulir { background: rgba(10, 14, 20, .94); }
+}
 .kepala-dalam {
   max-width: 1280px; margin: 0 auto; height: 58px;
   background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
@@ -549,7 +562,7 @@ img { display: block; }
   grid-template-columns: min(26vw, 98px) min(32.2vw, 121px) min(26vw, 98px);
   align-items: center; column-gap: 6px; margin: 0 auto 18px; width: max-content;
   max-width: calc(100% - 24px); }
-.mg-cov { position: relative; display: block; border-radius: 7px; overflow: hidden;
+.mg-cov { position: relative; display: block; border-radius: 4px; overflow: hidden;
   background: var(--panel); text-decoration: none;
   box-shadow: 0 16px 34px rgba(0,0,0,.5); }
 .mg-cov img { display: block; width: 100%; height: 100%; object-fit: cover; }

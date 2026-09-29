@@ -239,4 +239,21 @@
 
     mgTampil(0);
   }
+
+  /* ── HEADER: jadi kaca/blur saat halaman discroll ── */
+  (function () {
+    var kp = document.querySelector('.kepala');
+    if (!kp) return;
+    var ambang = 8, minta = false;
+    function segar() {
+      minta = false;
+      var y = window.scrollY || window.pageYOffset || 0;
+      if (y > ambang) kp.classList.add('kepala-gulir');
+      else kp.classList.remove('kepala-gulir');
+    }
+    window.addEventListener('scroll', function () {
+      if (!minta) { minta = true; requestAnimationFrame(segar); }
+    }, { passive: true });
+    segar();
+  })();
 })();
