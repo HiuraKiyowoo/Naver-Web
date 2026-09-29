@@ -658,3 +658,35 @@ body.laci-ada { overflow: hidden; }
 /* hamburger didorong ke KANAN header */
 .kepala-dalam .hamburger { margin-left: auto; }
 .kepala-dalam .logo { margin-right: 0; }
+
+/* ══════════════════════════════════════════════════════════════
+   MINGGU INI — animasi halus saat GANTI kartu (Prev/Next & swipe)
+   ══════════════════════════════════════════════════════════════ */
+@keyframes mg-masuk {
+  from { opacity: 0; transform: translateX(var(--mg-geser, 0)) scale(.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes mg-naik {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes mg-samping {
+  from { opacity: 0; transform: translateX(var(--mg-geser, 0)) scale(.94); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.mg-cov.mg-anim         { animation: mg-masuk .38s cubic-bezier(.2,.8,.25,1) both; }
+.mg-cov.mg-side.mg-anim { animation: mg-samping .38s cubic-bezier(.2,.8,.25,1) both; }
+.mg-meta.mg-anim, .mg-tags.mg-anim, .mg-nav.mg-anim {
+  animation: mg-naik .34s cubic-bezier(.2,.8,.25,1) both; }
+.mg-tags.mg-anim { animation-delay: .04s; }
+.mg-meta.mg-anim { animation-delay: .08s; }
+.mg-nav.mg-anim  { animation-delay: .12s; }
+.mg-cov img { transition: opacity .28s ease; }
+.mg-nav button { transition: background .18s, transform .12s; }
+.mg-nav button:active { transform: scale(.9); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mg-cov.mg-anim, .mg-cov.mg-side.mg-anim,
+  .mg-meta.mg-anim, .mg-tags.mg-anim, .mg-nav.mg-anim { animation: none; }
+  .mg-cov img { transition: none; }
+}

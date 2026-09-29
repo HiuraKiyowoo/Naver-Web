@@ -192,6 +192,36 @@
       el.setAttribute('href', n.url || '#');
     }
 
+    var mgArah = 0;   /* -1 = mundur, +1 = maju, 0 = pertama kali */
+
+    function mgBersihAnim() {
+      var ae = document.querySelectorAll('.mg-anim');
+      for (var k = 0; k < ae.length; k++) ae[k].classList.remove('mg-anim');
+    }
+
+    function mgPasangAnim(geser) {
+      if (geser === undefined) geser = mgArah < 0 ? -26 : (mgArah > 0 ? 26 : 0);
+      document.documentElement.style.setProperty('--mg-geser', geser + 'px');
+      var sel = [elKiri, elUtama, elKanan,
+                 document.querySelector('.mg-tags'),
+                 document.querySelector('.mg-meta'),
+                 document.querySelector('.mg-nav')];
+      for (var k = 0; k < sel.length; k++) {
+        if (!sel[k]) continue;
+        sel[k].classList.remove('mg-anim');
+        void sel[k].offsetWidth;          /* paksa reflow → animasi restart */
+        sel[k].classList.add('mg-anim');
+      }
+      window.setTimeout(mgBersihAnim, 700);
+    }
+
+    /* pra-muat cover tetangga supaya ganti kartu tidak kedip */
+    function mgPra(n) {
+      if (!n || !n.cover) return;
+      var im = new Image();
+      im.src = n.cover;
+    }
+
     function mgTampil(i) {
       if (!mg.length) return;
       mgIdx = i;
@@ -215,12 +245,18 @@
 
       elPrevJ.textContent = mgAmbil(i - 1).judul || '—';
       elNextJ.textContent = mgAmbil(i + 1).judul || '—';
+
+      /* pra-muat tetangga → kartu berikutnya tidak kedip */
+      mgPra(mgAmbil(i - 2)); mgPra(mgAmbil(i - 1));
+      mgPra(mgAmbil(i + 1)); mgPra(mgAmbil(i + 2));
     }
 
     ['mgPrev', 'mgNext'].forEach(function (id) {
       var b = document.getElementById(id);
       if (b) b.addEventListener('click', function () {
-        mgTampil(mgIdx + parseInt(b.getAttribute('data-dir'), 10));
+        mgArah = parseInt(b.getAttribute('data-dir'), 10) || 0;
+        mgTampil(mgIdx + mgArah);
+        mgPasangAnim();
       });
     });
 
@@ -232,12 +268,17 @@
       area.addEventListener('touchend', function (e) {
         if (x0 === null) return;
         var d = e.changedTouches[0].clientX - x0;
-        if (Math.abs(d) > 40) mgTampil(mgIdx + (d < 0 ? 1 : -1));
+        if (Math.abs(d) > 40) {
+          mgArah = (d < 0 ? 1 : -1);
+          mgTampil(mgIdx + mgArah);
+          mgPasangAnim(mgArah * 26);
+        }
         x0 = null;
       }, { passive: true });
     }
 
     mgTampil(0);
+    mgPasangAnim(0);
   }
 
   /* ── HEADER: jadi kaca/blur saat halaman discroll ── */
