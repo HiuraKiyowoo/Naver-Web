@@ -56,13 +56,11 @@
 {% endif %}
 {% endmacro %}
 
+
 {{ bagian('Update Terbaru', 'Bab paling baru masuk', '/jelajah?order=update', 'r4', update, 'bab', rak2=True, bernomor=True) }}
 {{ bagian('Rating Tertinggi', 'Nilai 4.2 ke atas dari pembaca', '/jelajah?order=rating', 'r2', premium, 'rating') }}
 {{ bagian('Baru Ditambahkan', 'Terakhir masuk arsip', '/jelajah?order=baru', 'r3', baru, 'status') }}
-{{ bagian('Masih Jalan', 'Belum tamat, masih berlanjut', '/jelajah?status=ongoing', 'r5b', ongoing, 'status') }}
-{{ bagian('Sudah Tamat', 'Lengkap sampai akhir', '/jelajah?status=completed', 'r5', tamat, 'status') }}
-{{ bagian('Web Novel', 'Novel web dari sumber online', '/jelajah?tipe=web', 'r9', webnovel, 'status') }}
-{{ bagian('Light Novel', 'Novel terbitan berilustrasi', '/jelajah?tipe=light', 'r10', light, 'status') }}
+
 {# ── Jelajahi Acak: KIPAS kartu miring (khusus section ini) ── #}
 {% if acak %}
 <section class="bagian">
@@ -76,6 +74,10 @@
 </section>
 {% endif %}
 
+{{ bagian('Masih Jalan', 'Belum tamat, masih berlanjut', '/jelajah?status=ongoing', 'r5b', ongoing, 'status') }}
+{{ bagian('Sudah Tamat', 'Lengkap sampai akhir', '/jelajah?status=completed', 'r5', tamat, 'status') }}
+{{ bagian('Web Novel', 'Novel web dari sumber online', '/jelajah?tipe=web', 'r9', webnovel, 'status') }}
+{{ bagian('Light Novel', 'Novel terbitan berilustrasi', '/jelajah?tipe=light', 'r10', light, 'status') }}
 {# ── Telusuri Genre (pil) ── #}
 {% if genre %}
 <section class="bagian">
