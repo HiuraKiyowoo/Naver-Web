@@ -205,13 +205,15 @@ def beranda(request: Request):
 
     # ── JELAJAHI ACAK: hitung posisi kipas DI SINI, jangan di Jinja ──
     # ⚠️ Jinja tidak bisa `dict()`/`append`/kurung kurawal → pelajaran 29 Sep.
-    jml = len(acak[:5])
-    tgh = (jml - 1) / 2
-    for j, k in enumerate(acak):
-        d = j - tgh
+    # Rumus user: offset = i-1.5 · translateY(|offset|*7) · rotate(offset*7)
+    #             + margin-left i*52 (dulu 60 → total 356px, tumpuk terlalu
+    #             ke kiri di HP 360px). 52 → total 104+4*52 = 312px, PAS.
+    for j, k in enumerate(acak[:5]):
+        d = j - 1.5
+        k["lr"] = j * 52
         k["sudut"] = round(d * 7, 1)
         k["geser"] = round(abs(d) * 7, 1)
-        k["z"] = round(10 - d, 1)
+        k["z"] = j
     # TAMAT: status Completed (207 novel — judul jujur).
     tamat = [kartu(r) for r in ambil(
         "SELECT * FROM novel WHERE cover_webp IS NOT NULL AND judul != '' "

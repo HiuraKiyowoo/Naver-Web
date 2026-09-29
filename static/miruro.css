@@ -97,20 +97,15 @@ img { display: block; }
    Kartu ditumpuk miring (rotate + translateY), sudut dari JS:
      transform: translateY(|i-1.5|*7px) rotate((i-1.5)*7deg)
    5 kartu: -2,-1,0,1,2 → rotasi -14°, -7°, 0°, +7°, +14° */
-.fan { position: relative; height: 190px; margin: 0 20px; }
-.fi { position: absolute; bottom: 0; width: 116px;
-  left: calc(50% - 148px); transform-origin: 50% 100%; }
-.fi img { width: 100%; aspect-ratio: 4/5; object-fit: cover;
-  border-radius: 8px; box-shadow: 0 10px 24px rgba(6,10,18,.55); }
+.fan{position:relative;height:190px;margin:0 20px}
+.fi{position:absolute;bottom:0;width:104px;left:calc(50% - 160px);transform-origin:50% 100%}
+.fi img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:8px;box-shadow:0 10px 24px rgba(20,25,60,.3)}
 .fi:hover img { filter: brightness(1.12); }
-/* lencana kecil di sudut kartu kipas */
-.bd { display: inline-flex; gap: 5px; background: rgba(18,24,38,.78);
-  backdrop-filter: blur(6px); color: #fff; border-radius: 5px;
-  padding: 3px 8px; font-size: 11px; font-weight: 900; }
-.bd em { font-style: normal; }
-.bd .LN { color: var(--cyan2); }
-.bd .WN { color: var(--cyan); }
-.fi .bd { position: absolute; left: 8px; top: 8px; }
+.bd{display:inline-flex;gap:5px;background:rgba(20,24,52,.75);backdrop-filter:blur(6px);color:#fff;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:900}
+.bd em{font-style:normal}
+.bd .LN{color:var(--cyan2)}
+.bd .WN{color:var(--cyan)}
+.fi .bd{position:absolute;left:8px;top:8px}
 .cari-besar { display: flex; align-items: center; gap: 12px; height: 52px;
   padding: 0 8px 0 20px; border-radius: 14px; margin: 0 8px 20px;
   background: var(--panel); border: 1px solid var(--garis);
@@ -483,7 +478,7 @@ img { display: block; }
   .rak2 .kartu-judul { font-size: 9.5px; }
   .rak2 .kartu-meta { font-size: 8px; }
   /* kipas acak: tetap 5 kartu miring, cuma dikecilkan */
-  .fan { height: 165px; margin: 0 12px; }
-  .fi { width: 92px; left: calc(50% - 116px); }
-  .fi .bd { font-size: 9px; padding: 2px 6px; left: 5px; top: 5px; }
+  .fan{height:165px;margin:0 12px}
+  .fi{width:88px;left:calc(50% - 138px)}
+  .fi .bd{font-size:9px;padding:2px 6px;left:5px;top:5px}
 }

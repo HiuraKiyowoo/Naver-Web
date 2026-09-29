@@ -6,7 +6,7 @@
 <div class="fan">
   {% for n in acak[:5] %}
   <a class="fi" href="{{ n.url }}"
-     style="transform: translateY({{ n.geser }}px) rotate({{ n.sudut }}deg); z-index: {{ n.z }}">
+     style="margin-left:{{ n.lr }}px; z-index:{{ n.z }}; transform:translateY({{ n.geser }}px) rotate({{ n.sudut }}deg)">
     {% if n.cover %}
       <img src="{{ n.cover }}" alt="Cover {{ n.judul }}" loading="lazy">
     {% else %}
