@@ -1,44 +1,63 @@
 {% extends "base.html" %}
-{% block judul %}Profil: {{ nama }}{% endblock %}
+{% block judul %}{{ judul }}{% endblock %}
 
 {% block isi %}
-<div class="wadah" style="padding-top:110px">
+<div class="wadah">
+  <div class="kepala-halaman">
+    <h1>Profil</h1>
+    <span>Akun &amp; pengaturan</span>
+  </div>
 
-  <div class="judul-hal" style="padding:0">
-    <div>
-      <h1>Profil</h1>
-      <p>Akun & pengaturan</p>
+  {% if pengguna %}
+  {# ── SUDAH MASUK ── #}
+  <div class="akun-kartu">
+    {% if pengguna.foto %}
+    <img class="akun-foto" src="{{ pengguna.foto }}" alt="" referrerpolicy="no-referrer">
+    {% else %}
+    <span class="akun-foto akun-foto-abu">{{ (pengguna.nama or pengguna.email or 'P')[:1]|upper }}</span>
+    {% endif %}
+    <div class="akun-teks">
+      <b>{{ pengguna.nama or 'Pembaca' }}</b>
+      <span>{{ pengguna.email or '—' }}</span>
+      <span class="akun-lencana">Masuk sebagai {{ pengguna.penyedia or 'firebase' }}</span>
     </div>
   </div>
 
-  <div class="panel" style="text-align:center;padding:48px 24px">
-    <b style="display:block;font-size:44px;color:var(--cyan);line-height:1;letter-spacing:-.04em">☺</b>
-    <b style="display:block;margin:16px 0 8px;font-size:17px;font-weight:900">Belum ada akun</b>
-    <span class="redup" style="display:block;font-size:12.5px;line-height:1.75;max-width:440px;margin:0 auto">
-      Masuk, daftar, dan atur akun belum bisa dipakai.
-      Sistem login masih <b style="color:var(--cyan)">rencana</b>, belum dibuat.
-    </span>
-    <div class="detail-aksi" style="justify-content:center;margin-top:26px">
-      <a class="tombol tombol-utama" href="/">Ke Beranda</a>
-      <a class="tombol tombol-abu" href="/apk">Unduh APK</a>
+  <div class="akun-statistik">
+    <a class="akun-stat" href="/pustaka">
+      <b>{{ jml_fav }}</b><span>Favorit</span>
+    </a>
+    <a class="akun-stat" href="/pustaka">
+      <b>—</b><span>Riwayat baca</span>
+    </a>
+    <a class="akun-stat" href="/pustaka">
+      <b>—</b><span>Lanjut baca</span>
+    </a>
+  </div>
+
+  <div class="akun-aksi">
+    <a class="tombol tombol-utama" href="/pustaka">Buka Pustaka</a>
+    <a class="tombol tombol-abu" href="/keluar">Keluar</a>
+  </div>
+
+  {% else %}
+  {# ── BELUM MASUK ── #}
+  <div class="akun-kartu akun-kartu-tamu">
+    <span class="akun-foto akun-foto-abu">?</span>
+    <div class="akun-teks">
+      <b>Belum masuk</b>
+      <span>Masuk supaya favorit, riwayat baca, dan posisi bab tersimpan.</span>
     </div>
   </div>
 
-  <section class="bagian">
-    <div class="bagian-kepala">
-      <div class="bagian-kiri"><h2>Tentang Situs</h2><span class="bagian-sub">Keterangan jujur</span></div>
-    </div>
-    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">
-      {% for f in [('Arsip Pribadi', 'Kumpulan novel terjemahan, disimpan di server sendiri.'),
-                   ('Isi Bab Lengkap', 'Teks bab tersimpan di server, bukan tautan ke luar.'),
-                   ('Ada Ilustrasi', 'Gambar bab ikut tersimpan untuk novel yang punya.'),
-                   ('Pencarian Isi', 'Cari kata di dalam seluruh isi bab.')] %}
-      <div class="panel" style="margin:0">
-        <h3 style="margin:0 0 8px;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.06em">{{ f[0] }}</h3>
-        <p class="redup" style="margin:0;font-size:12px;line-height:1.7">{{ f[1] }}</p>
-      </div>
-      {% endfor %}
-    </div>
-  </section>
+  <div class="akun-aksi">
+    <a class="tombol tombol-utama" href="/masuk">Masuk / Daftar</a>
+    <a class="tombol tombol-abu" href="/">Ke Beranda</a>
+  </div>
+
+  {% if not fb_siap %}
+  <div class="akun-catatan">⚠️ Sistem masuk belum aktif di server ini.</div>
+  {% endif %}
+  {% endif %}
 </div>
 {% endblock %}

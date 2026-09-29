@@ -915,3 +915,50 @@ body.ada-kunci{
           backdrop-filter:blur(10px);
   border-bottom:1px solid rgba(160,200,240,.08);
 }
+
+/* ══════════════════════════════════════════════════════════
+   PROFIL & PUSTAKA
+   ══════════════════════════════════════════════════════════ */
+.akun-kartu{ display:flex; gap:14px; align-items:center;
+  padding:16px; border-radius:12px; margin:14px 0 18px;
+  background:linear-gradient(180deg,#1A1F26,#161B22);
+  border:1px solid rgba(160,200,240,.10); }
+.akun-foto{ width:56px; height:56px; border-radius:50%; flex:0 0 auto;
+  object-fit:cover; background:#232A33; }
+.akun-foto-abu{ display:inline-flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:700; color:#38BDF8;
+  background:rgba(4,157,253,.14); border:1px solid rgba(4,157,253,.28); }
+.akun-teks{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.akun-teks b{ font-size:16px; color:#F2F7FC; }
+.akun-teks span{ font-size:12.5px; color:#A8BBCE; }
+.akun-lencana{ display:inline-block !important; width:max-content;
+  font-size:10px !important; padding:3px 9px; border-radius:6px;
+  background:rgba(4,157,253,.12); color:#38BDF8 !important;
+  border:1px solid rgba(4,157,253,.26); }
+.akun-kartu-tamu .akun-foto-abu{ color:#8FA3B8; background:rgba(255,255,255,.05);
+  border-color:rgba(160,200,240,.12); }
+.akun-statistik{ display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:16px; }
+.akun-stat{ display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:13px 8px; border-radius:11px; text-decoration:none;
+  background:rgba(255,255,255,.045); border:1px solid rgba(160,200,240,.10); }
+.akun-stat b{ font-size:19px; color:#F2F7FC; }
+.akun-stat span{ font-size:10.5px; color:#8FA3B8; text-align:center; }
+.akun-stat:hover{ background:rgba(4,157,253,.14); border-color:rgba(4,157,253,.30); }
+.akun-aksi{ display:flex; gap:9px; flex-wrap:wrap; }
+.akun-catatan{ margin-top:14px; font-size:12px; color:#A8BBCE;
+  padding:11px 13px; border-radius:9px;
+  background:rgba(255,193,7,.07); border:1px solid rgba(255,193,7,.20); }
+
+/* pustaka: daftar riwayat */
+.pustaka-daftar{ display:flex; flex-direction:column; gap:8px; }
+.pustaka-baris{ display:flex; gap:11px; align-items:center; text-decoration:none;
+  padding:9px 11px; border-radius:11px;
+  background:rgba(255,255,255,.04); border:1px solid rgba(160,200,240,.09); }
+.pustaka-baris:hover{ background:rgba(4,157,253,.12); border-color:rgba(4,157,253,.28); }
+.pustaka-baris img, .pustaka-kosong{ width:44px; height:62px; border-radius:6px;
+  flex:0 0 auto; object-fit:cover; background:#232A33; }
+.pustaka-teks{ display:flex; flex-direction:column; gap:3px; min-width:0; flex:1; }
+.pustaka-teks b{ font-size:13.5px; color:#F2F7FC;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pustaka-teks span{ font-size:11px; color:#8FA3B8; }
+.pustaka-lanjut{ font-size:11.5px; color:#38BDF8; flex:0 0 auto; }

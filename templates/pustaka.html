@@ -1,44 +1,77 @@
 {% extends "base.html" %}
-{% block judul %}Pustaka: {{ nama }}{% endblock %}
+{% block judul %}{{ judul }}{% endblock %}
 
 {% block isi %}
-<div class="wadah" style="padding-top:110px">
-
-  <div class="judul-hal" style="padding:0">
-    <div>
-      <h1>Pustaka</h1>
-      <p>Koleksi pribadi & riwayat baca</p>
-    </div>
+<div class="wadah">
+  <div class="kepala-halaman">
+    <h1>Pustaka</h1>
+    <span>Koleksi pribadi &amp; riwayat baca</span>
   </div>
 
-  <div class="panel" style="text-align:center;padding:48px 24px">
-    <b style="display:block;font-size:44px;color:var(--cyan);line-height:1;letter-spacing:-.04em">▤</b>
-    <b style="display:block;margin:16px 0 8px;font-size:17px;font-weight:900">Belum ada akun</b>
-    <span class="redup" style="display:block;font-size:12.5px;line-height:1.75;max-width:420px;margin:0 auto">
-      Pustaka menyimpan novel favorit, riwayat baca, dan posisi bab terakhir.
-      Fitur ini baru bisa jalan setelah <b style="color:var(--cyan)">sistem login</b> dibuat —
-      dan itu belum jadi.
-    </span>
-    <div class="detail-aksi" style="justify-content:center;margin-top:26px">
-      <a class="tombol tombol-utama" href="/jelajah">Jelajah Novel</a>
-      <a class="tombol tombol-abu" href="/">Ke Beranda</a>
-    </div>
-  </div>
+  {% if pengguna %}
 
+  {# ══ FAVORIT ══ #}
   <section class="bagian">
     <div class="bagian-kepala">
-      <div class="bagian-kiri"><h2>Isi Arsip Sekarang</h2><span class="bagian-sub">Yang sudah tersimpan di server</span></div>
+      <div class="bagian-kiri"><h2>Favorit</h2>
+        <span class="bagian-sub">{{ fav|length }} novel disimpan</span></div>
     </div>
-    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">
-      {% for f in [('Novel', total_novel), ('Bab', total_bab), ('Ilustrasi', total_gambar)] %}
-      <div class="panel" style="margin:0;text-align:center">
-        <b style="display:block;font-size:26px;font-weight:900;color:var(--cyan);letter-spacing:-.02em">
-          {{ '{:,}'.format(f[1]).replace(',', '.') }}
-        </b>
-        <span class="bagian-sub" style="margin-top:6px">{{ f[0] }}</span>
-      </div>
+    {% if fav %}
+    <div class="grid">
+      {% for m in fav %}{% set n = m %}{% include "_kartu.html" %}{% endfor %}
+    </div>
+    {% else %}
+    <div class="kosong">
+      <b>Belum ada favorit</b>
+      <span>Tekan tombol ♥ di halaman novel untuk menyimpannya di sini.</span>
+    </div>
+    {% endif %}
+  </section>
+
+  {# ══ RIWAYAT BACA ══ #}
+  <section class="bagian">
+    <div class="bagian-kepala">
+      <div class="bagian-kiri"><h2>Riwayat Baca</h2>
+        <span class="bagian-sub">{{ riwayat|length }} novel terakhir</span></div>
+    </div>
+    {% if riwayat %}
+    <div class="pustaka-daftar">
+      {% for m in riwayat %}
+      <a class="pustaka-baris" href="/novel/{{ m.slug }}/bab/{{ m.bab_terakhir }}">
+        {% if m.cover %}
+        <img src="{{ m.cover }}" alt="" loading="lazy">
+        {% else %}<span class="pustaka-kosong"></span>{% endif %}
+        <span class="pustaka-teks">
+          <b>{{ m.judul }}</b>
+          <span>Bab terakhir dibaca: {{ m.bab_terakhir }}</span>
+        </span>
+        <span class="pustaka-lanjut">Lanjut →</span>
+      </a>
       {% endfor %}
     </div>
+    {% else %}
+    <div class="kosong">
+      <b>Belum ada riwayat</b>
+      <span>Novel yang kamu baca akan muncul di sini.</span>
+    </div>
+    {% endif %}
   </section>
+
+  {% else %}
+
+  {# ══ BELUM MASUK ══ #}
+  <div class="akun-kartu akun-kartu-tamu">
+    <span class="akun-foto akun-foto-abu">▤</span>
+    <div class="akun-teks">
+      <b>Pustaka masih kosong</b>
+      <span>Masuk untuk menyimpan favorit, riwayat baca, dan posisi bab terakhirmu.</span>
+    </div>
+  </div>
+  <div class="akun-aksi">
+    <a class="tombol tombol-utama" href="/masuk">Masuk / Daftar</a>
+    <a class="tombol tombol-abu" href="/jelajah">Jelajah dulu</a>
+  </div>
+
+  {% endif %}
 </div>
 {% endblock %}

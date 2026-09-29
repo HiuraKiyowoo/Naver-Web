@@ -761,27 +761,80 @@ def apk(request: Request):
 #     keadaannya, BUKAN pura-pura punya data pengguna.
 #     (Rencana login ada di CATATAN/nanti-kerjaan-tertunda.md)
 # ═════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
+#  BANTUAN: ambil detail novel dari sebuah daftar id (untuk
+#  halaman Pustaka: favorit & riwayat baca)
+# ══════════════════════════════════════════════════════════════
+def _novel_dari_id(ids):
+    """ids: daftar id novel (urutannya dipertahankan)"""
+    if not ids:
+        return []
+    tanda = ",".join("?" * len(ids))
+    baris = ambil(f"SELECT * FROM novel WHERE id IN ({tanda})", tuple(ids))
+    peta = {r["id"]: dict(r) for r in baris}
+    out = []
+    for i in ids:
+        if i in peta:
+            n = peta[i]
+            n["cover"] = f"/cover/{i}.webp" if n.get("cover_webp") else None
+            out.append(n)
+    return out
+
+
+def _posisi_baca(pengguna_id):
+    """novel_id -> urutan terakhir yang dibaca (paling baru di atas)"""
+    baris = auth.riwayat(pengguna_id, batas=60)
+    return [dict(r) for r in baris]
+
+
 @app.get("/pustaka", response_class=HTMLResponse)
 def pustaka(request: Request):
-    n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
-    b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
-    g = ambil("SELECT COUNT(*) c FROM bab_gambar", satu=True)["c"]
+    pengguna = getattr(request.state, "pengguna", None)
+    fav, riw = [], []
+    if pengguna:
+        try:
+            fav = _novel_dari_id([x["novel_id"] for x in auth.daftar_favorit(pengguna["id"])])
+        except Exception:
+            fav = []
+        try:
+            pos = _posisi_baca(pengguna["id"])
+            riw = []
+            for p in pos:
+                baris = ambil("SELECT * FROM novel WHERE id=?", (p["novel_id"],), satu=True)
+                if not baris:
+                    continue
+                nn = dict(baris)
+                nn["cover"] = f"/cover/{nn['id']}.webp" if nn.get("cover_webp") else None
+                nn["bab_terakhir"] = p["urutan"]
+                nn["waktu_baca"] = p.get("waktu")
+                riw.append(nn)
+        except Exception:
+            riw = []
     return tpl.TemplateResponse(request, "pustaka.html", {
         "situs": SITUS, "halaman": "pustaka", "nama": NAMA,
         "judul": f"Pustaka: {NAMA}",
-        "desk": "Koleksi pribadi dan riwayat baca (menunggu sistem login).",
+        "desk": "Koleksi pribadi, favorit, dan riwayat baca.",
         "kanon": f"{SITUS}/pustaka",
-        "total_novel": n, "total_bab": b, "total_gambar": g,
+        "pengguna": pengguna, "fav": fav, "riwayat": riw,
     })
 
 
 @app.get("/profil", response_class=HTMLResponse)
 def profil(request: Request):
+    pengguna = getattr(request.state, "pengguna", None)
+    jml_fav = 0
+    if pengguna:
+        try:
+            jml_fav = len(auth.daftar_favorit(pengguna["id"]))
+        except Exception:
+            jml_fav = 0
     return tpl.TemplateResponse(request, "profil.html", {
         "situs": SITUS, "halaman": "profil", "nama": NAMA,
         "judul": f"Profil: {NAMA}",
-        "desk": "Akun dan pengaturan (menunggu sistem login).",
+        "desk": "Akun dan pengaturan.",
         "kanon": f"{SITUS}/profil",
+        "pengguna": pengguna, "jml_fav": jml_fav, "fb_siap": auth.firebase_siap(),
+        "fb_web": FB_WEB,
     })
 
 
