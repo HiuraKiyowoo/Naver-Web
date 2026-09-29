@@ -184,7 +184,7 @@ def beranda(request: Request):
         #    Jinja → nomor keluar KOSONG (pelajaran 29 Sep).
         k["no"] = len(update) + 1
         update.append(k)
-        if len(update) >= 12:
+        if len(update) >= 16:
             break
     # TAMAT: status Completed (207 novel — judul jujur).
     tamat = [kartu(r) for r in ambil(

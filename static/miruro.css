@@ -68,12 +68,20 @@ img { display: block; }
 .nav-atas a.tombol-apk { background: var(--cyan); color: #0A0E13; }
 .nav-atas a.tombol-apk:hover { background: var(--cyan2); color: #0A0E13; }
 
-/* ── daftar bernomor 2 KOLOM (khusus section Update Terbaru) ──
+/* ── daftar bernomor 2 KOLOM × 2 BARIS — bisa di-SWIPE ──
    ⚠️ WAJIB 2 kolom di semua ukuran (desktop/tablet/HP).
+   Tampil cuma 2 baris (4 kartu); sisanya digeser ke SAMPING.
    Di HP: kartu, cover, jarak & teks DIPERKECIL — JANGAN jadi 1 kolom. */
-.rak2 { display: grid; grid-template-columns: repeat(2, 1fr);
-  gap: 8px; padding: 0 8px 14px; }
-.rak2 .kartu { width: 100%; flex-direction: row; align-items: center; gap: 10px; }
+.rak2 { display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-columns: calc((100% - 8px) / 2);
+  gap: 8px; padding: 0 8px 14px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none; }
+.rak2::-webkit-scrollbar { display: none; }
+.rak2 .kartu { width: 100%; flex-direction: row; align-items: center; gap: 10px;
+  scroll-snap-align: start; }
 .rak2 .kartu-cover { width: 46px; flex: 0 0 46px; aspect-ratio: 2/3;
   border-radius: 4px; box-shadow: 0 6px 16px rgba(0,0,0,.45); }
 .rak2 .kartu:hover .kartu-cover img { transform: none; }
