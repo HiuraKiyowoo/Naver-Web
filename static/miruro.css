@@ -169,7 +169,7 @@ img { display: block; }
 }
 .hero-track::-webkit-scrollbar { display: none; }
 .hero-item {
-  flex: 0 0 88%; max-width: 860px; margin: 0 -10px; scroll-snap-align: center;
+  flex: 0 0 90%; max-width: 860px; scroll-snap-align: center;
   aspect-ratio: 16/9; position: relative; overflow: hidden; background: var(--panel2);
   border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.5);
   transition: transform .4s cubic-bezier(.25,1,.5,1), opacity .4s;
