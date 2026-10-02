@@ -20,6 +20,7 @@ import json
 import os
 import re
 import sqlite3
+import rate_limit
 import secrets
 import urllib.request
 import urllib.parse
@@ -66,8 +67,51 @@ BASE = Path(__file__).resolve().parent
 ROOT = BASE.parent
 DB = ROOT / "naver.db"
 
-app = FastAPI(title="Naver Web", docs_url=None, redoc_url=None)
+app = FastAPI(title="Naver Web", docs_url=None, redoc_url=None,
+                  openapi_url=None)   # audit 1 Okt: openapi_url LUPA dimatikan -> bocor 10 KB peta route
 
+
+# ═════════════════════════════════════════════════════════════
+#  RATE LIMIT (audit 1 Okt, putaran 2) — disimpan di SQLite
+# ═════════════════════════════════════════════════════════════
+_RAPORT = {}
+
+
+@app.middleware("http")
+async def _rate_limit(request: Request, call_next):
+    jalur = request.url.path
+
+    # ── BLOKIR BOT SCRAPER AI (ClaudeBot, GPTBot, CCBot, dll) ──
+    # Terbukti: ClaudeBot menyedot rak tanpa izin & mengabaikan robots.txt.
+    ua = (request.headers.get("user-agent") or "").lower()
+    for bot in ("claudebot", "anthropic-ai", "gptbot", "chatgpt-user", "ccbot",
+                "google-extended", "bytespider", "petalbot", "amazonbot",
+                "applebot-extended", "img2dataset", "diffbot", "omgili",
+                "scrapy", "node-fetch", "okhttp", "headless", "phantomjs",
+                "selenium", "puppeteer", "playwright"):
+        if bot in ua:
+            rate_limit.kena_honeypot(request)   # blokir 24 jam
+            print(f"[BOT-BLOCK] {ua[:60]} -> diblokir", flush=True)
+            return HTMLResponse("<h1>403 Forbidden</h1>", status_code=403)
+
+    # ── HONEYPOT: link gaib, hanya scraper yang mengikutinya ──
+    if jalur.startswith("/jangan-ke-sini") or jalur.startswith("/wp-login") \
+            or jalur.startswith("/.git") or jalur.startswith("/xmlrpc"):
+        ip = rate_limit.kena_honeypot(request)
+        print(f"[HONEYPOT] {ip} menyentuh {jalur} -> blokir 24 jam", flush=True)
+        return HTMLResponse("<h1>403</h1>", status_code=403)
+
+    kena, sisa, sebab = rate_limit.periksa(
+        request, jalur, batas_umum=240, batas_bab=10)
+    if kena:
+        _RAPORT[rate_limit.ip_asli(request)] = sebab
+        return HTMLResponse(
+            "<html><body style='font-family:sans-serif;text-align:center;padding:60px'>"
+            "<h2>Terlalu banyak permintaan</h2>"
+            f"<p>Coba lagi dalam <b>{sisa}</b> detik.</p></body></html>",
+            status_code=429, headers={"Retry-After": str(sisa)})
+
+    return await call_next(request)
 
 # ═════════════════════════════════════════════════════════════
 #  AUTH — baca cookie sesi (pengguna) & tamu di setiap permintaan
@@ -242,6 +286,26 @@ tpl.env.globals["tipe_lencana"] = tipe_lencana
 
 # ── konfigurasi situs (dipakai di <head> utk SEO) ──
 SITUS = os.environ.get("NAVER_SITUS", "https://navernovel.my.id")
+
+# ── Domain yang dikenal (1 Okt: pindah utama ke navernovel.my.id / CF) ──
+DOMAIN_DIKENAL = (
+    "navernovel.my.id", "www.navernovel.my.id",
+    # naver.zone.id DIMATIKAN 1 Okt (user: "naver zone matiin aja").
+    # Kalau mau dihidupkan lagi: buang tanda # di 2 baris di bawah.
+    # "naver.zone.id", "www.naver.zone.id",
+)
+
+
+def situs_untuk(request) -> str:
+    """Pilih domain untuk canonical/OG/sitemap sesuai yang diakses pengunjung.
+    Header Host diisi proxy/CF (bukan bisa dipalsukan sembarangan); kalau
+    hostnya tidak dikenal, pakai SITUS default."""
+    host = (request.headers.get("host") or "").split(":")[0].lower()
+    if host in DOMAIN_DIKENAL:
+        skema = "https" if (request.headers.get("x-forwarded-proto") == "https"
+                            or request.url.scheme == "https") else "http"
+        return f"{skema}://{host}"
+    return SITUS
 NAMA = "Naver Novel"
 DESK = ("Baca novel terjemahan Indonesia gratis: web novel & light novel "
         "lengkap dengan ilustrasi, update tiap hari.")
@@ -282,6 +346,7 @@ def ambil(q, par=(), satu=False):
 # ═════════════════════════════════════════════════════════════
 @app.get("/", response_class=HTMLResponse)
 def beranda(request: Request):
+    situs = situs_untuk(request)
     n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
     b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
     # HERO: novel rating tertinggi — SEMUA sudah berating (rating >= 4.0).
@@ -407,13 +472,13 @@ def beranda(request: Request):
         minggu.append(mg)
 
     return tpl.TemplateResponse(request, "beranda.html", {
-        "situs": SITUS, "halaman": "beranda", "nama": NAMA, "desk": DESK,
-        "kanon": str(request.url), "total_novel": n, "total_bab": b,
+        "situs": situs, "halaman": "beranda", "nama": NAMA, "desk": DESK,
+        "kanon": situs + "/", "total_novel": n, "total_bab": b,
         "hero": hero, "acak": acak, "baru": baru,
         "update": update, "tamat": tamat, "ongoing": ongoing,
         "genre": genre, "tag": tag, "premium": premium,
         "light": light, "webnovel": webnovel, "minggu": minggu,
-        "gambar_og": SITUS + "/static/img/logo.png",
+        "gambar_og": situs + "/static/img/logo.png",
     })
 
 
@@ -422,6 +487,7 @@ def beranda(request: Request):
 # ═════════════════════════════════════════════════════════════
 @app.get("/novel/{slug}", response_class=HTMLResponse)
 def novel(request: Request, slug: str):
+    situs = situs_untuk(request)
     r = ambil("SELECT * FROM novel WHERE slug=?", (slug,), satu=True)
     if not r:
         raise HTTPException(404)
@@ -432,8 +498,19 @@ def novel(request: Request, slug: str):
         SELECT t.slug, t.nama FROM tag t
         JOIN novel_tag nt ON nt.tag_id=t.id WHERE nt.novel_id=?""", (r["id"],))]
     bab = [dict(x) for x in ambil(
-        "SELECT urutan, nomor, judul, tanggal, ada_gambar FROM bab "
+        "SELECT urutan, nomor, judul, volume, tanggal, ada_gambar FROM bab "
         "WHERE novel_id=? ORDER BY urutan", (r["id"],))]
+    # ── KELOMPOK VOLUME (collapsible) ──
+    # Bab dikelompokkan per volume; urut NAIK (Volume 1 → N), bab di dalam juga naik.
+    # Kalau ADA bab yang volumenya kosong → seluruh daftar tanpa collapsible
+    # (aturan user: novel tanpa volume = daftar bab langsung).
+    vol_ada = all(b.get("volume") is not None for b in bab)
+    grup_volume = []
+    if vol_ada and bab:
+        dari = {}
+        for b in bab:
+            dari.setdefault(b["volume"], []).append(b)
+        grup_volume = [{"volume": v, "bab": dari[v]} for v in sorted(dari)]
     serupa = [kartu(x) for x in ambil("""
         SELECT DISTINCT n.* FROM novel n
         JOIN novel_genre ng ON ng.novel_id=n.id
@@ -441,14 +518,14 @@ def novel(request: Request, slug: str):
           AND n.id<>? AND n.cover_webp IS NOT NULL
         ORDER BY n.jumlah_bab DESC LIMIT 12""", (r["id"], r["id"]))]
     return tpl.TemplateResponse(request, "novel.html", {
-        "situs": SITUS, "halaman": "novel", "batas_bab": auth.BATAS_TAMU, "nama": NAMA,
+        "situs": situs, "halaman": "novel", "batas_bab": auth.BATAS_TAMU, "nama": NAMA,
         "judul": f"{r['judul']}: {NAMA}",
         "desk": (r["sinopsis"] or DESK)[:160],
-        "kanon": f"{SITUS}/novel/{slug}",
-        "gambar_og": f"{SITUS}/cover/{r['id']}.webp" if r["cover_webp"] else None,
+        "kanon": f"{situs}/novel/{slug}",
+        "gambar_og": f"{situs}/cover/{r['id']}.webp" if r["cover_webp"] else None,
         "n": dict(r), "cover": f"/cover/{r['id']}.webp" if r["cover_webp"] else None,
         "genre": genre, "tag": tag, "bab": bab, "serupa": serupa,
-        "jlh_bab": len(bab),
+        "jlh_bab": len(bab), "grup_volume": grup_volume,
         "pengguna": getattr(request.state, "pengguna", None),
         "favorit": (auth.favorit_ada(request.state.pengguna["id"], r["id"])
                     if getattr(request.state, "pengguna", None) else False),
@@ -462,6 +539,7 @@ def novel(request: Request, slug: str):
 # ═════════════════════════════════════════════════════════════
 @app.get("/novel/{slug}/bab/{urutan}", response_class=HTMLResponse)
 def bab(request: Request, slug: str, urutan: int):
+    situs = situs_untuk(request)
     n = ambil("SELECT * FROM novel WHERE slug=?", (slug,), satu=True)
     if not n:
         raise HTTPException(404)
@@ -510,10 +588,10 @@ def bab(request: Request, slug: str, urutan: int):
         "SELECT urutan, nomor, judul FROM bab WHERE novel_id=? ORDER BY urutan",
         (n["id"],))]
     return tpl.TemplateResponse(request, "bab.html", {
-        "situs": SITUS, "halaman": "bab", "batas_bab": auth.BATAS_TAMU, "nama": NAMA,
+        "situs": situs, "halaman": "bab", "batas_bab": auth.BATAS_TAMU, "nama": NAMA,
         "judul": f"{b['judul']}: {n['judul']} | {NAMA}",
         "desk": "Baca bab {} · {} — {} di {}.".format(urutan, (b["judul"] or "")[:80], (n["judul"] or "")[:70], NAMA),
-        "kanon": f"{SITUS}/novel/{slug}/bab/{urutan}",
+        "kanon": f"{situs}/novel/{slug}/bab/{urutan}",
         "n": dict(n), "b": dict(b), "paragraf": teks, "gambar": gmb,
         "sebelum": sebelum, "sesudah": sesudah, "semua_bab": semua_bab,
         "ada_teks": ada_teks,
@@ -563,11 +641,12 @@ def fb_js():
 
 @app.get("/masuk", response_class=HTMLResponse)
 def masuk(request: Request):
+    situs = situs_untuk(request)
     return tpl.TemplateResponse(request, "masuk.html", {
-        "situs": SITUS, "halaman": "masuk", "nama": NAMA,
+        "situs": situs, "halaman": "masuk", "nama": NAMA,
         "judul": f"Masuk · {NAMA}",
         "desk": "Masuk untuk membaca semua bab, simpan riwayat & pustaka pribadi.",
-        "kanon": f"{SITUS}/masuk",
+        "kanon": f"{situs}/masuk",
         "fb_web": FB_WEB, "fb_jslibs": FB_JSLIBS,
         "fb_siap": bool(FB_WEB["apiKey"] and auth.firebase_siap()),
         "pengguna": getattr(request.state, "pengguna", None),
@@ -618,6 +697,7 @@ async def api_auth_sesi(request: Request):
 
 @app.get("/api/auth/me")
 def api_auth_me(request: Request):
+    situs = situs_untuk(request)
     p = getattr(request.state, "pengguna", None)
     if not p:
         return JSONResponse({"ok": True, "masuk": False})
@@ -778,6 +858,7 @@ async def api_favorit(request: Request):
 @app.post("/keluar")
 @app.get("/keluar")
 def keluar(request: Request):
+    situs = situs_untuk(request)
     auth.akhiri_sesi(request.cookies.get(auth.COOKIE_SESI))
     resp = RedirectResponse("/", status_code=303)
     resp.delete_cookie(auth.COOKIE_SESI)
@@ -789,6 +870,7 @@ def jelajah(request: Request,
             q: str = "", status: str = "", tipe: str = "",
             genre: str = "", tag: str = "", negara: str = "",
             order: str = "populer", page: int = 1, per: int = 24):
+    situs = situs_untuk(request)
     where, par = ["n.cover_webp IS NOT NULL"], []
     if q:
         where.append("(n.judul LIKE ? OR COALESCE(n.penulis, n.author) LIKE ?)")
@@ -835,9 +917,9 @@ def jelajah(request: Request,
     t_list = [dict(x) for x in ambil(
         "SELECT slug, nama, jumlah_novel FROM tag ORDER BY jumlah_novel DESC LIMIT 60")]
     return tpl.TemplateResponse(request, "jelajah.html", {
-        "situs": SITUS, "halaman": "jelajah", "nama": NAMA,
+        "situs": situs, "halaman": "jelajah", "nama": NAMA,
         "judul": f"Jelajah Novel: {NAMA}", "desk": DESK,
-        "kanon": f"{SITUS}/jelajah",
+        "kanon": f"{situs}/jelajah",
         "hasil": [kartu(x) for x in baris], "total": total,
         "q": q, "status": status, "tipe": tipe, "genre": genre, "tag": tag,
         "negara": negara,
@@ -849,6 +931,7 @@ def jelajah(request: Request,
 
 @app.get("/genre/{slug}", response_class=HTMLResponse)
 def genre(request: Request, slug: str, page: int = 1, per: int = 24):
+    situs = situs_untuk(request)
     g = ambil("SELECT * FROM genre WHERE slug=?", (slug,), satu=True)
     if not g:
         raise HTTPException(404)
@@ -859,9 +942,9 @@ def genre(request: Request, slug: str, page: int = 1, per: int = 24):
         ORDER BY n.jumlah_bab DESC LIMIT ? OFFSET ?""",
                   (g["id"], per, (page - 1) * per))
     return tpl.TemplateResponse(request, "daftar.html", {
-        "situs": SITUS, "halaman": "daftar", "nama": NAMA,
+        "situs": situs, "halaman": "daftar", "nama": NAMA,
         "judul": f"Genre {g['nama']}: {NAMA}", "desk": f"Novel genre {g['nama']}.",
-        "kanon": f"{SITUS}/genre/{slug}",
+        "kanon": f"{situs}/genre/{slug}",
         "kepala": f"Genre: {g['nama']}", "hasil": [kartu(x) for x in baris],
         "total": total, "page": page, "per": per,
         "total_hal": (total + per - 1) // per, "dasar_url": f"/genre/{slug}",
@@ -870,6 +953,7 @@ def genre(request: Request, slug: str, page: int = 1, per: int = 24):
 
 @app.get("/tag/{slug}", response_class=HTMLResponse)
 def tag(request: Request, slug: str, page: int = 1, per: int = 24):
+    situs = situs_untuk(request)
     t = ambil("SELECT * FROM tag WHERE slug=?", (slug,), satu=True)
     if not t:
         raise HTTPException(404)
@@ -880,9 +964,9 @@ def tag(request: Request, slug: str, page: int = 1, per: int = 24):
         ORDER BY n.jumlah_bab DESC LIMIT ? OFFSET ?""",
                   (t["id"], per, (page - 1) * per))
     return tpl.TemplateResponse(request, "daftar.html", {
-        "situs": SITUS, "halaman": "daftar", "nama": NAMA,
+        "situs": situs, "halaman": "daftar", "nama": NAMA,
         "judul": f"Tag {t['nama']}: {NAMA}", "desk": f"Novel dengan tag {t['nama']}.",
-        "kanon": f"{SITUS}/tag/{slug}",
+        "kanon": f"{situs}/tag/{slug}",
         "kepala": f"Tag: {t['nama']}", "hasil": [kartu(x) for x in baris],
         "total": total, "page": page, "per": per,
         "total_hal": (total + per - 1) // per, "dasar_url": f"/tag/{slug}",
@@ -891,6 +975,7 @@ def tag(request: Request, slug: str, page: int = 1, per: int = 24):
 
 @app.get("/cari", response_class=HTMLResponse)
 def cari(request: Request, q: str = "", page: int = 1, per: int = 24):
+    situs = situs_untuk(request)
     hasil, total, bab_hits = [], 0, []
     if q:
         total = ambil("SELECT COUNT(*) c FROM novel WHERE judul LIKE ? OR "
@@ -909,9 +994,9 @@ def cari(request: Request, q: str = "", page: int = 1, per: int = 24):
         except sqlite3.Error:
             bab_hits = []
     return tpl.TemplateResponse(request, "cari.html", {
-        "situs": SITUS, "halaman": "cari", "nama": NAMA,
+        "situs": situs, "halaman": "cari", "nama": NAMA,
         "judul": f"Cari {q}: {NAMA}", "desk": DESK,
-        "kanon": f"{SITUS}/cari?q={q}",
+        "kanon": f"{situs}/cari?q={q}",
         "q": q, "hasil": hasil, "total": total, "bab_hits": bab_hits,
         "page": page, "per": per, "total_hal": (total + per - 1) // per,
     })
@@ -1015,6 +1100,16 @@ def sitemap_bab(bagian: int):
 def robots():
     return PlainTextResponse(
         f"User-agent: *\nAllow: /\nDisallow: /api/\n"
+        "User-agent: ClaudeBot\nDisallow: /\n"
+        "User-agent: GPTBot\nDisallow: /\n"
+        "User-agent: CCBot\nDisallow: /\n"
+        "User-agent: Google-Extended\nDisallow: /\n"
+        "User-agent: Bytespider\nDisallow: /\n"
+        "User-agent: Amazonbot\nDisallow: /\n"
+        "User-agent: Applebot-Extended\nDisallow: /\n"
+        "User-agent: PetalBot\nDisallow: /\n"
+        "User-agent: anthropic-ai\nDisallow: /\n"
+        "User-agent: Meta-ExternalAgent\nDisallow: /\n"
         f"Sitemap: {SITUS}/sitemap.xml\n")
 
 
@@ -1054,6 +1149,7 @@ def api_status():
 @app.get("/status", response_class=HTMLResponse)
 def halaman_status(request: Request):
     """HALAMAN status: isi arsip apa adanya + request pengguna"""
+    situs = situs_untuk(request)
     s = _stat_ringkas()
     try:
         req_jml = len(auth.permintaan_daftar(None, batas=9999))
@@ -1072,10 +1168,10 @@ def halaman_status(request: Request):
     except Exception:
         akhir = None
     return tpl.TemplateResponse(request, "status.html", {
-        "situs": SITUS, "halaman": "status", "nama": NAMA,
+        "situs": situs, "halaman": "status", "nama": NAMA,
         "judul": "Status Arsip: " + NAMA,
         "desk": "Jumlah novel, bab, dan ilustrasi di arsip Naver.",
-        "kanon": SITUS + "/status",
+        "kanon": situs + "/status",
         "s": s, "req": req, "req_jml": req_jml,
         "teratas": teratas, "akhir": akhir,
         "pengguna": getattr(request.state, "pengguna", None),
@@ -1085,14 +1181,15 @@ def halaman_status(request: Request):
 @app.get("/apk", response_class=HTMLResponse)
 def apk(request: Request):
     """Halaman unduh APK (file ditaruh di web/static/naver.apk kalau ada)."""
+    situs = situs_untuk(request)
     apk = BASE / "static" / "naver.apk"
     n = ambil("SELECT COUNT(*) c FROM novel", satu=True)["c"]
     b = ambil("SELECT COUNT(*) c FROM bab", satu=True)["c"]
     return tpl.TemplateResponse(request, "apk.html", {
-        "situs": SITUS, "halaman": "apk", "nama": NAMA,
+        "situs": situs, "halaman": "apk", "nama": NAMA,
         "judul": f"Unduh APK: {NAMA}",
         "desk": "Unduh aplikasi Android Naver Novel untuk baca offline.",
-        "kanon": f"{SITUS}/apk",
+        "kanon": f"{situs}/apk",
         "apk_url": "/static/naver.apk" if apk.exists() else None,
         "total_novel": n, "total_bab": b,
     })
@@ -1115,6 +1212,7 @@ def apk(request: Request):
 # ══════════════════════════════════════════════════════════════
 def _sudah_dibaca(request, novel_id):
     """kumpulan nomor urutan bab yang sudah dibaca (set)"""
+    situs = situs_untuk(request)
     try:
         pengguna = getattr(request.state, "pengguna", None)
         if pengguna:
@@ -1129,6 +1227,7 @@ def _sudah_dibaca(request, novel_id):
 
 def _lanjut_baca(request, novel_id):
     """urutan bab terakhir yang dibaca (untuk tombol 'Lanjut baca')"""
+    situs = situs_untuk(request)
     try:
         pengguna = getattr(request.state, "pengguna", None)
         if pengguna:
@@ -1167,6 +1266,7 @@ def _posisi_baca(pengguna_id):
 # ══════════════════════════════════════════════════════════════
 @app.get("/request", response_class=HTMLResponse)
 def halaman_request(request: Request):
+    situs = situs_untuk(request)
     pengguna = getattr(request.state, "pengguna", None)
     permintaan = []
     if pengguna:
@@ -1175,16 +1275,17 @@ def halaman_request(request: Request):
         except Exception:
             permintaan = []
     return tpl.TemplateResponse(request, "request.html", {
-        "situs": SITUS, "halaman": "request", "nama": NAMA,
+        "situs": situs, "halaman": "request", "nama": NAMA,
         "judul": "Request Novel: " + NAMA,
         "desk": "Minta novel baru untuk ditambahkan ke arsip.",
-        "kanon": SITUS + "/request",
+        "kanon": situs + "/request",
         "pengguna": pengguna, "permintaan": permintaan,
     })
 
 
 @app.get("/pustaka", response_class=HTMLResponse)
 def pustaka(request: Request):
+    situs = situs_untuk(request)
     pengguna = getattr(request.state, "pengguna", None)
     fav, riw = [], []
     if pengguna:
@@ -1207,16 +1308,17 @@ def pustaka(request: Request):
         except Exception:
             riw = []
     return tpl.TemplateResponse(request, "pustaka.html", {
-        "situs": SITUS, "halaman": "pustaka", "nama": NAMA,
+        "situs": situs, "halaman": "pustaka", "nama": NAMA,
         "judul": f"Pustaka: {NAMA}",
         "desk": "Koleksi pribadi, favorit, dan riwayat baca.",
-        "kanon": f"{SITUS}/pustaka",
+        "kanon": f"{situs}/pustaka",
         "pengguna": pengguna, "fav": fav, "riwayat": riw,
     })
 
 
 @app.get("/profil", response_class=HTMLResponse)
 def profil(request: Request):
+    situs = situs_untuk(request)
     pengguna = getattr(request.state, "pengguna", None)
     jml_fav = 0
     if pengguna:
@@ -1225,10 +1327,10 @@ def profil(request: Request):
         except Exception:
             jml_fav = 0
     return tpl.TemplateResponse(request, "profil.html", {
-        "situs": SITUS, "halaman": "profil", "nama": NAMA,
+        "situs": situs, "halaman": "profil", "nama": NAMA,
         "judul": f"Profil: {NAMA}",
         "desk": "Akun dan pengaturan.",
-        "kanon": f"{SITUS}/profil",
+        "kanon": f"{situs}/profil",
         "pengguna": pengguna, "jml_fav": jml_fav, "fb_siap": auth.firebase_siap(),
         "fb_web": FB_WEB,
     })
@@ -1240,13 +1342,48 @@ def profil(request: Request):
 #  Pesan menyebut SEBAB + LANGKAH berikutnya, bukan sekadar "error".
 # ═════════════════════════════════════════════════════════════
 def _hal_galat(request: Request, kode: int, pesan: str, rinci: str):
+    situs = situs_untuk(request)
     q = request.query_params.get("q", "")
     return tpl.TemplateResponse(request, "galat.html", {
-        "situs": SITUS, "halaman": "galat", "nama": NAMA, "kanon": str(request.url),
+        "situs": situs, "halaman": "galat", "nama": NAMA, "kanon": str(request.url),
         "judul": f"{kode}: {pesan} | {NAMA}",
         "desk": rinci,
         "kode": kode, "pesan": pesan, "rinci": rinci, "q": q,
     }, status_code=kode)
+
+
+
+# =============================================================
+#  HEADER KEAMANAN (audit 1 Okt) -- pola mengikuti sakuranovel.id
+#  Catatan: web ini pakai FastAPI (bukan Flask), jadi pakai middleware("http").
+# =============================================================
+@app.middleware("http")
+async def _header_aman(request: Request, call_next):
+    jawab = await call_next(request)
+    H = jawab.headers
+    # 1) HSTS -- paksa HTTPS (web sudah HTTPS penuh lewat proxy)
+    H.setdefault("Strict-Transport-Security",
+                 "max-age=31536000; includeSubDomains")
+    # 2) Cegah browser menebak tipe berkas (anti XSS lewat .jpg berisi JS)
+    H.setdefault("X-Content-Type-Options", "nosniff")
+    # 3) Anti clickjacking
+    H.setdefault("X-Frame-Options", "SAMEORIGIN")
+    # 4) Jangan bocorkan URL internal ke situs luar
+    H.setdefault("Referrer-Policy", "same-origin")
+    # 5) Matikan fitur perangkat yang tidak dipakai
+    H.setdefault("Permissions-Policy",
+                 "geolocation=(), microphone=(), camera=(), payment=(), usb=()")
+    # 6) CSP -- mode LAPOR dulu (tidak memblokir apa pun), biar aman
+    H.setdefault(
+        "Content-Security-Policy-Report-Only",
+        "default-src 'self'; img-src 'self' data: https:; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "script-src 'self' 'unsafe-inline' https://www.gstatic.com "
+        "https://apis.google.com; font-src 'self' data: https://fonts.gstatic.com; "
+        "connect-src 'self' https://identitytoolkit.googleapis.com "
+        "https://securetoken.googleapis.com; frame-src 'self' "
+        "https://naver-zone-id.firebaseapp.com https://navernovel-my-id.firebaseapp.com; object-src 'none'; base-uri 'self'")
+    return jawab
 
 
 @app.exception_handler(404)

@@ -1151,3 +1151,51 @@ a.hal-angka-item:hover{ background:rgba(4,157,253,.16); color:#DFF0FF; }
   transition:background .15s ease,color .15s ease,border-color .15s ease;white-space:nowrap}
 .genre-lagi:hover{background:var(--emas);color:#000;border-color:var(--emas)}
 .detail-tag{margin-top:-8px}
+
+
+/* ── COLLAPSIBLE DAFTAR VOLUME (novel.html) ────────────────────────── */
+.vol-daftar { display: flex; flex-direction: column; gap: 8px; }
+
+.vol-item {
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 12px;
+  background: rgba(255,255,255,.02);
+  overflow: hidden;
+}
+.vol-item[open] { border-color: rgba(4,157,253,.35); background: rgba(4,157,253,.05); }
+
+.vol-kepala {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 15px;
+  cursor: pointer; list-style: none;
+  font-weight: 800; font-size: 14px; color: rgba(255,255,255,.92);
+  user-select: none;
+  transition: background .15s ease;
+}
+.vol-kepala::-webkit-details-marker { display: none; }
+.vol-kepala:hover { background: rgba(255,255,255,.05); }
+
+.vol-nama { flex: 1 1 auto; }
+.vol-jml {
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,.42);
+  background: rgba(255,255,255,.06); padding: 3px 9px; border-radius: 999px;
+}
+
+/* panah ▸ / ▾ — diputar saat terbuka */
+.vol-panah {
+  flex: 0 0 auto; width: 8px; height: 8px;
+  border-right: 2px solid rgba(255,255,255,.55);
+  border-bottom: 2px solid rgba(255,255,255,.55);
+  transform: rotate(-45deg); transition: transform .18s ease;
+  margin-left: 2px; margin-right: 3px;
+}
+.vol-item[open] > .vol-kepala .vol-panah { transform: rotate(45deg); }
+.vol-item[open] > .vol-kepala { color: var(--emas, #e9c46a); }
+
+/* daftar bab di dalam volume — beri jarak dari kepala */
+.vol-item > .bab-daftar { padding: 2px 10px 10px; }
+
+@media (max-width: 560px) {
+  .vol-kepala { padding: 12px 13px; font-size: 13px; }
+  .vol-item > .bab-daftar { padding: 2px 7px 8px; }
+}
